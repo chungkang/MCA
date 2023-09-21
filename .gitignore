@@ -1,3 +1,6 @@
+# ignore directories
+Data_Sources/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
