@@ -22,7 +22,7 @@ import warnings
 from settings import *
 
 # customized functions
-import custom_functions as b_custom_functions
+from custom_functions import *
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -37,11 +37,12 @@ exclusion_path = PATH + PROJECT + "04_exclusion\\"
 clipping_path = PATH + PROJECT + "05_clipping\\"
 proximity_path = PATH + PROJECT + "06_proximity\\"
 weighting_path = PATH + PROJECT + "07_weighting\\"
+LCOE_path = PATH + PROJECT + "08_LCOE\\"
 
 fp_boundary = data_download_path + "boundary.shp"
-fp_substationcost = Path+Project+"\\In_Data\\Transmission\\gsscost.tif"
-fp_main_roads = Path+Project+"\\In_Data\\Roads\\main_roads.shp"
-fp_bathymetry = Path+Project+"\\In_Data\\Bathymetry\\*_bathymetry.tif"
+# fp_substationcost = Path+Project+"\\In_Data\\Transmission\\gsscost.tif"
+fp_main_roads = LCOE_path + "main_roads.shp"
+fp_bathymetry = data_download_path + "GLOBathy.tif"
 
 ####################### FUNCTIONS ##############################################
 
@@ -59,35 +60,25 @@ bbox = box(x_min, y_min, x_max, y_max)
 
 ####################### COST ESTIMATION ########################################
 
-raster_protected = rasterio.open(Path+Project+"\\Out_Data\\Processing\\r_protected.tif")
-raster_recreation = rasterio.open(Path+Project+"\\Out_Data\\Processing\\r_recreation.tif")
-raster_military = rasterio.open(Path+Project+"\\Out_Data\\Processing\\r_military.tif")
-raster_rivers = rasterio.open(Path+Project+"\\Out_Data\\Processing\\r_rivers.tif")
+raster_protected = rasterio.open(rasterizing_path + "protected_area.tif")
+raster_rivers = rasterio.open(rasterizing_path + "rivers.tif")
+ 
+exclusion = raster_protected.read(1) * raster_rivers.read(1)
 
-r1 = raster_protected.read(1)
-r2 = raster_recreation.read(1)
-r3 = raster_military.read(1)
-r4 = raster_rivers.read(1) 
-exclusion = r1 * r2 * r3 * r4
-
-waterbodies = gpd.read_file(filtering_path + "water.shp")
+water = gpd.read_file(filtering_path + "water.shp")
 
 exclusion = rasterio.open(exclusion_path + "exclusion.tif")
 ex = exclusion.read(1)
 
 print("Starting cost estimation")
 
-waterbodies_scored = gpd.read_file(filtering_path + "water.shp")
-data50 = waterbodies_scored.buffer(50)
-data50.to_file(Path+Project+"\\Out_Data\\Processing\\water50.shp")
-data50 = gpd.read_file(Path+Project+"\\Out_Data\\Processing\\water50.shp")
-waterbodies_ring = data50.difference(waterbodies)
-waterbodies_ring.to_file(Path+Project+"\\Out_Data\\Processing\\waterdonut.shp")
-waterbodies_ring = gpd.read_file(Path+Project+"\\Out_Data\\Processing\\waterdonut.shp")
-
+water_buffer50 = water.buffer(50)
+water_buffer50.to_file(LCOE_path + "water_buffer50.shp")
+water_ring = water_buffer50.difference(water)
+water_ring.to_file(LCOE_path + "waterdonut.shp")
 
 ### roads ###
-b_custom_functions.rasterize(fp_main_roads, 'Processing\\main_roads_r', shp_crs, pixel_size, x_res, y_res, 1, 0, x_min, y_max)
+b_custom_functions.rasterize(fp_main_roads, 'Processing\\main_roads_r', shp_crs, PIXEL_SIZE, x_res, y_res, 1, 0, x_min, y_max)
 b_custom_functions.proximity(Path+Project+"\\Out_Data\\Processing\\main_roads_r.tif", 'Processing\\main_roads_custom_functions.proximity.tif')
 
 with rasterio.open(Path+Project+"\\Out_Data\\Processing\\main_roads_custom_functions.proximity.tif") as src:
@@ -101,16 +92,18 @@ waterbodies_scored['road_cost_mean'] = waterbodies_scored['road_cost_mean'] * ro
 
 
 ### substations ###
-with rasterio.open(fp_substationcost) as src:
-    affine = src.transform
-    array = src.read(1)
-    array = array[0:-1]
-    df_zonal_stats = pd.DataFrame(zonal_stats(waterbodies_ring, array, affine=affine))
+# with rasterio.open(fp_substationcost) as src:
+#     affine = src.transform
+#     array = src.read(1)
+#     array = array[0:-1]
+#     df_zonal_stats = pd.DataFrame(zonal_stats(waterbodies_ring, array, affine=affine))
     
-df_zonal_stats = df_zonal_stats.add_prefix('line_cost_')
-waterbodies_scored = pd.concat([waterbodies_scored, df_zonal_stats['line_cost_mean']], axis=1)
-waterbodies_scored['line_cost_mean'] = waterbodies_scored['line_cost_mean'] * transmission_cost
-waterbodies_scored.to_file(Path+Project+"\\Out_Data\\waterbodies_lcoe.shp")
+# df_zonal_stats = df_zonal_stats.add_prefix('line_cost_')
+# waterbodies_scored = pd.concat([waterbodies_scored, df_zonal_stats['line_cost_mean']], axis=1)
+# waterbodies_scored['line_cost_mean'] = waterbodies_scored['line_cost_mean'] * transmission_cost
+# waterbodies_scored.to_file(Path+Project+"\\Out_Data\\waterbodies_lcoe.shp")
+
+
 #waterbodies_scored = waterbodies_scored.drop(['lcoe_min','lcoe_max','rank_min','rank_max'],axis=1)
 #waterbodies_scored.to_file(Path+Project+"\\waterbodies_lcoe.kml", driver='KML')
 #waterbodies_csv = waterbodies_scored.drop(['geometry'],axis=1)
@@ -124,13 +117,13 @@ wind[np.where(wind == 4)] = 110
 wind[np.where(wind == 7)] = 105
 wind[np.where(wind == 10)] = 100
 
-b_custom_functions.save_raster(wind, x_res, y_res, pixel_size, pixel_size, "cost_wind.tif", 
+b_custom_functions.save_raster(wind, x_res, y_res, PIXEL_SIZE, PIXEL_SIZE, "cost_wind.tif", 
             True, "Processing\\r_recreation.tif", x_min, y_max)
 #show(wind)
 
 
 b_custom_functions.rasterize(Path+Project+"\\Out_Data\\waterbodies.shp", 'Processing\\waterbodies_r', shp_crs, 
-          pixel_size, x_res, y_res, 0, 1, x_min, y_max)
+          PIXEL_SIZE, x_res, y_res, 0, 1, x_min, y_max)
 
 b_custom_functions.proximity(Path+Project+"\\Out_Data\\Processing\\waterbodies_r.tif", 'Processing\\cost_waterbodies.tif')
 
@@ -140,7 +133,7 @@ water_cost[np.where(water_cost < 100)] = 0
 water_cost[np.where((100 <= water_cost) & (water_cost <= 500))] = 100
 water_cost[np.where(water_cost > 500)] = 110
 
-b_custom_functions.save_raster(water_cost, x_res, y_res, pixel_size, pixel_size, "cost_water.tif", 
+b_custom_functions.save_raster(water_cost, x_res, y_res, PIXEL_SIZE, PIXEL_SIZE, "cost_water.tif", 
             True, "Processing\\r_recreation.tif", x_min, y_max)
 #show(water_cost)
 
@@ -161,20 +154,20 @@ bathymetry[np.where(bathymetry < 2)] = 0
 bathymetry[np.where((2 <= bathymetry) & (bathymetry <= 10))] = 100
 bathymetry[np.where((10 < bathymetry) & (bathymetry <= 20))] = 130
 
-pixel_size_x = (x_max - x_min) / len(bathymetry[0])
-pixel_size_y = (y_max - y_min) / len(bathymetry)
-b_custom_functions.save_raster(bathymetry, len(bathymetry[0]), len(bathymetry), pixel_size_x, pixel_size_y, 
+PIXEL_SIZE_x = (x_max - x_min) / len(bathymetry[0])
+PIXEL_SIZE_y = (y_max - y_min) / len(bathymetry)
+b_custom_functions.save_raster(bathymetry, len(bathymetry[0]), len(bathymetry), PIXEL_SIZE_x, PIXEL_SIZE_y, 
             "Processing\\bathy_cost.tif", True, "Processing\\bathymetry.tif", x_min, y_max)
 
 src = gdal.Open(Path+Project+"\\Out_Data\\Processing\\bathy_cost.tif")
-ulx, pixel_size_x, xskew, uly, yskew, pixel_size_y  = src.GetGeoTransform()
-lrx = ulx + (src.RasterXSize * pixel_size_x)
-lry = uly + (src.RasterYSize * pixel_size_y)
+ulx, PIXEL_SIZE_x, xskew, uly, yskew, PIXEL_SIZE_y  = src.GetGeoTransform()
+lrx = ulx + (src.RasterXSize * PIXEL_SIZE_x)
+lry = uly + (src.RasterYSize * PIXEL_SIZE_y)
 proj = src.GetProjection()
-xres = ((lrx) - (ulx)) / pixel_size_x
-yres = ((uly) - (lry)) / -pixel_size_y
+xres = ((lrx) - (ulx)) / PIXEL_SIZE_x
+yres = ((uly) - (lry)) / -PIXEL_SIZE_y
 
-npad = int((max(abs(x_min-ulx),abs(x_max-lrx),abs(y_min-lry),abs(y_max-uly))) / pixel_size_x)
+npad = int((max(abs(x_min-ulx),abs(x_max-lrx),abs(y_min-lry),abs(y_max-uly))) / PIXEL_SIZE_x)
 topad = gdal.Open(Path+Project+"\\Out_Data\\Processing\\bathy_cost.tif")
 gt = topad.GetGeoTransform()
 colortable = topad.GetRasterBand(1).GetColorTable()
@@ -188,8 +181,8 @@ raster = np.pad(Itopad, npad, mode='constant', constant_values=0)
 
 band = gdal.GetDriverByName('GTiff').Create(Path+Project+"\\Out_Data\\Processing\\bathy_pad.tif", 
                                         len(raster[0]), len(raster), 1)
-band.SetGeoTransform((ulx-(npad*pixel_size_x), pixel_size_x, 0, uly+(npad*pixel_size_x), 
-                      0, pixel_size_y))
+band.SetGeoTransform((ulx-(npad*PIXEL_SIZE_x), PIXEL_SIZE_x, 0, uly+(npad*PIXEL_SIZE_x), 
+                      0, PIXEL_SIZE_y))
 band.GetRasterBand(1).WriteArray(raster)
 band.SetGeoTransform(gt_new)
 band.SetProjection(proj)
@@ -234,12 +227,12 @@ waterbodies_scored = pd.concat([waterbodies_scored, df_zonal_stats['pvout_mean']
 #check this formula including pvout scaling (automate)
 system = (((wind / 100) * pv_cost) + ((bathymetry / 100) * mooring_cost) + ((water_cost / 100) * cable_cost)) * 100
 #show(system)
-b_custom_functions.save_raster(system, x_res, y_res, pixel_size, pixel_size, "system.tif", True, "Processing\\r_recreation.tif", x_min, y_max)
+b_custom_functions.save_raster(system, x_res, y_res, PIXEL_SIZE, PIXEL_SIZE, "system.tif", True, "Processing\\r_recreation.tif", x_min, y_max)
 
 bathymetry[np.where(bathymetry != 0)] = 1
 water_cost[np.where(water_cost != 0)] = 1
 lcoe_mask = system * bathymetry * water_cost
-b_custom_functions.save_raster(lcoe_mask, x_res, y_res, pixel_size, pixel_size, "lcoe_mask.tif", 
+b_custom_functions.save_raster(lcoe_mask, x_res, y_res, PIXEL_SIZE, PIXEL_SIZE, "lcoe_mask.tif", 
             True, "Processing\\r_recreation.tif", x_min, y_max)
 
 with rasterio.open(Path+Project+"\\Out_Data\\lcoe_mask.tif", 'r+') as src:
@@ -284,7 +277,7 @@ rank = rasterio.open(Path+Project+"\\Out_Data\\weighting.tif")
 rank_data = rank.read(1)
 
 final = (rank_data + lcoe_data) * ex
-b_custom_functions.save_raster(final, x_res, y_res, pixel_size, pixel_size, "final.tif", 
+b_custom_functions.save_raster(final, x_res, y_res, PIXEL_SIZE, PIXEL_SIZE, "final.tif", 
             True, "Processing\\r_recreation.tif", x_min, y_max)
 
 with rasterio.open(Path+Project+"\\Out_Data\\final.tif", 'r+') as src:

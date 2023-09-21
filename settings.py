@@ -4,7 +4,7 @@ Created by Kimberly Mason
 November 2022
 """
 # Public
-PATH = "C:\\workspace\\FloatingPV-SiteTool-Chicamba\\Projects\\" # path to Projects folder
+PATH = "projects\\" # path to Projects folder
 PROJECT = "MZ_AfDB_Chicamba\\"
 
 # Search https://nominatim.openstreetmap.org/ui/search.html for the place name,

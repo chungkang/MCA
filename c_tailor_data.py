@@ -51,7 +51,7 @@ print("Filtering complete")
 rasterize(data_download_path + "boundary.shp", rasterizing_path + "boundary.tif", shp_crs, PIXEL_SIZE, boundary_x_resolusion, boundary_y_resslusion, 1, 0, boundary_x_min, boundary_y_max) # POI area
 rasterize(input_data_path + "protected_area.shp" , rasterizing_path + "protected_area.tif", shp_crs, PIXEL_SIZE, boundary_x_resolusion, boundary_y_resslusion, 1, 0, boundary_x_min, boundary_y_max)
 rasterize(data_download_path + "substation.shp", rasterizing_path + 'substation.tif', shp_crs, PIXEL_SIZE, boundary_x_resolusion, boundary_y_resslusion, 1, 0, boundary_x_min, boundary_y_max)
-rasterize(data_download_path + "road.shp", rasterizing_path + 'road.tif', shp_crs, PIXEL_SIZE, boundary_x_resolusion, boundary_y_resslusion, 1, 0, boundary_x_min, boundary_y_max)
+rasterize(data_download_path + "roads.shp", rasterizing_path + 'roads.tif', shp_crs, PIXEL_SIZE, boundary_x_resolusion, boundary_y_resslusion, 1, 0, boundary_x_min, boundary_y_max)
 rasterize(filtering_path + "filtered_water.shp", rasterizing_path + 'non_water.tif', shp_crs, PIXEL_SIZE, boundary_x_resolusion, boundary_y_resslusion, 0, 1, boundary_x_min, boundary_y_max) # consider non water body as exclusion area
 
 print("Rasterizing complete")

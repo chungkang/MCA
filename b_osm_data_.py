@@ -22,7 +22,7 @@ data_download_path = PATH + PROJECT + "01_data_download\\"
 
 # download pbf in interested area from the website below
 # https://extract.bbbike.org/
-osm = pyrosm.OSM("C:\workspace\FloatingPV-SiteTool-Chicamba\Data_Sources\chicamba.osm.pbf")
+osm = pyrosm.OSM("data_sources\chicamba.osm.pbf")
 
 # https://wiki.openstreetmap.org/wiki/Map_features
 
@@ -48,6 +48,12 @@ water.to_file(data_download_path + "water.shp", driver='ESRI Shapefile')
 # else:
 #     print("No water data found in the query.")
 
+# rivers
+current = osm.get_data_by_custom_criteria(custom_filter={'waterway':['river','dam']}, filter_type="keep", keep_nodes=False, keep_ways=True, keep_relations=True)
+current = current.set_crs('epsg:4326')
+current = current.to_crs(epsg=EPSG)
+current = current.buffer(200)
+current.to_file(data_download_path + "buffered_river.shp")
 
 #road
 road = osm.get_network(network_type="driving")
@@ -55,7 +61,7 @@ road = osm.get_network(network_type="driving")
 if road is not None:
     road = road.set_crs('epsg:4326')
     road = road.to_crs(epsg=EPSG)
-    road.to_file(data_download_path + "road.shp")
+    road.to_file(data_download_path + "roads.shp")
 else:
     print("No driving data found in the query.")
 

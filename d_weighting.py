@@ -116,7 +116,7 @@ resize_raster(weighting_path + "ghi_class.tif", x_factor, y_factor, weighting_pa
 ### substation, road, protected areas ###
 # substation, raster rater 읽기
 proximity(rasterizing_path + "substation.tif", proximity_path + 'substation_proximity.tif')
-proximity(rasterizing_path +"road.tif", proximity_path + 'road_proximity.tif')
+proximity(rasterizing_path +"roads.tif", proximity_path + 'roads_proximity.tif')
 proximity(rasterizing_path +"protected_area.tif", proximity_path + 'protected_area_proximity.tif')
 
 substation_proximity = rasterio.open(proximity_path + "substation_proximity.tif")
@@ -125,11 +125,11 @@ substation[np.where(substation > 15000)] = 15000
 substation = abs(((9 * (substation / 15000)) + 1) - 10) + 1
 save_raster(substation, x_res, y_res, PIXEL_SIZE, PIXEL_SIZE, weighting_path + "weight_substation.tif", False, fp_boundary_tif, x_min, y_max)
 
-road_proximity = rasterio.open( proximity_path+ "road_proximity.tif")
-road = road_proximity.read(1)
-road[np.where(road > 5000)] = 5000
-road = abs(((9 * (road / 5000)) + 1) - 10) + 1
-save_raster(road, x_res, y_res, PIXEL_SIZE, PIXEL_SIZE, weighting_path + "weight_road.tif", False, fp_boundary_tif, x_min, y_max)
+roads_proximity = rasterio.open( proximity_path+ "roads_proximity.tif")
+roads = roads_proximity.read(1)
+roads[np.where(roads > 5000)] = 5000
+roads = abs(((9 * (roads / 5000)) + 1) - 10) + 1
+save_raster(roads, x_res, y_res, PIXEL_SIZE, PIXEL_SIZE, weighting_path + "weight_roads.tif", False, fp_boundary_tif, x_min, y_max)
 
 protected_area_proximity = rasterio.open(proximity_path + "protected_area_proximity.tif")
 protected_area = protected_area_proximity.read(1)
@@ -149,7 +149,7 @@ save_raster(wind, x_res, y_res, pixel_size_wind_x, pixel_size_wind_y, weighting_
 raster_solar = rasterio.open(weighting_path + "weight_ghi.tif")
 raster_wind = rasterio.open(weighting_path +  "weight_wind.tif")
 raster_land = rasterio.open(weighting_path +  "weight_land.tif")
-raster_road = rasterio.open(weighting_path +  "weight_road.tif")
+raster_roads = rasterio.open(weighting_path +  "weight_roads.tif")
 raster_substation = rasterio.open(weighting_path +  "weight_substation.tif")
 raster_dsm = rasterio.open(weighting_path +  "weight_dsm.tif")
 raster_protected = rasterio.open(weighting_path +  "weight_protected_area.tif")
@@ -158,7 +158,7 @@ exclusion = rasterio.open(exclusion_path +  "exclusion.tif")
 r1 = raster_solar.read(1)
 r2 = raster_wind.read(1)
 r3 = raster_land.read(1) 
-r4 = raster_road.read(1)
+r4 = raster_roads.read(1)
 r5 = raster_substation.read(1)
 r6 = raster_dsm.read(1)
 r7 = raster_protected.read(1)
