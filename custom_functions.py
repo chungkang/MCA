@@ -20,7 +20,7 @@ from pyproj import Proj, transform
 import json
 from shapely.geometry import box
 
-from settings import *
+from a_settings import *
 
 def rasterize(input_shapefile, output_raster_name, shp_crs, pixel_size, x_resolusion, y_resolusion, no, ya, x_min, y_max):
     

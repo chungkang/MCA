@@ -15,7 +15,7 @@ import warnings
 from rasterstats import zonal_stats
 import pandas as pd
 
-from settings import *
+from a_settings import *
 from custom_functions import *
 
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -24,13 +24,13 @@ warnings.filterwarnings("ignore", message="Setting nodata to -999; specify nodat
 warnings.filterwarnings("ignore", message="Column names longer than 10 ")
 
 ####################### FILE PATHS #############################################
-data_download_path = PATH + PROJECT + "01_data_download\\"
-filtering_path = PATH + PROJECT + "02_filtering\\"
-rasterizing_path = PATH + PROJECT + "03_rasterizing\\"
-exclusion_path = PATH + PROJECT + "04_exclusion\\"
-clipping_path = PATH + PROJECT + "05_clipping\\"
-proximity_path = PATH + PROJECT + "06_proximity\\"
-weighting_path = PATH + PROJECT + "07_weighting\\"
+data_download_path = PATH + "01_data_download\\"
+filtering_path = PATH + "02_filtering\\"
+rasterizing_path = PATH + "03_rasterizing\\"
+exclusion_path = PATH + "04_exclusion\\"
+clipping_path = PATH + "05_clipping\\"
+proximity_path = PATH + "06_proximity\\"
+weighting_path = PATH + "07_weighting\\"
 
 fp_boundary_tif = rasterizing_path + "boundary.tif"
 fp_land = "Data_Sources\\Land_cover\\C3S-LC-L4-LCCS-Map-300m-P1Y-2020-v2.1.1.nc"
@@ -45,6 +45,7 @@ y_res = int((y_max - y_min) / PIXEL_SIZE)
 bbox = box(x_min, y_min, x_max, y_max)
 
 exclusion = rasterio.open(exclusion_path + "exclusion.tif")
+boundary_bbox_raster = get_raster_bbox(rasterizing_path + "boundary.tif")
 
 ####################### WEIGHTING ##############################################
 
@@ -115,10 +116,6 @@ resize_raster(weighting_path + "ghi_class.tif", x_factor, y_factor, weighting_pa
 
 ### substation, road, protected areas ###
 # substation, raster rater 읽기
-proximity(rasterizing_path + "substation.tif", proximity_path + 'substation_proximity.tif')
-proximity(rasterizing_path +"roads.tif", proximity_path + 'roads_proximity.tif')
-proximity(rasterizing_path +"protected_area.tif", proximity_path + 'protected_area_proximity.tif')
-
 substation_proximity = rasterio.open(proximity_path + "substation_proximity.tif")
 substation = substation_proximity.read(1)
 substation[np.where(substation > 15000)] = 15000
@@ -143,8 +140,8 @@ wind = raster_wind.read(1)
 wind = 10 - (10 * (wind - 0) / (10.7 - 0))
 pixel_size_wind_x = (x_max - x_min) / len(wind[0])
 pixel_size_wind_y = (y_max - y_min) / len(wind)
-save_raster(wind, x_res, y_res, pixel_size_wind_x, pixel_size_wind_y, weighting_path + "weight_wind.tif", False, fp_boundary_tif, x_min, y_max)
 
+save_raster(wind, x_res, y_res, pixel_size_wind_x, pixel_size_wind_y, weighting_path + "weight_wind.tif", False, fp_boundary_tif, x_min, y_max)
 
 raster_solar = rasterio.open(weighting_path + "weight_ghi.tif")
 raster_wind = rasterio.open(weighting_path +  "weight_wind.tif")
@@ -174,7 +171,7 @@ weighting = (
                 r7 * PROTECTED_AREA_WEIGHT
             ) * ex
 
-save_raster(weighting, x_res, y_res, PIXEL_SIZE, PIXEL_SIZE, PATH + PROJECT + "weighting.tif", False, fp_boundary_tif, x_min, y_max)
+save_raster(weighting, x_res, y_res, PIXEL_SIZE, PIXEL_SIZE, weighting_path + "weighting.tif", False, fp_boundary_tif, x_min, y_max)
 
 
 
@@ -185,21 +182,21 @@ data500.to_file(data_download_path + "water500.shp")
 
 data500 = gpd.read_file(data_download_path + "water500.shp")
 
-with rasterio.open(PATH + PROJECT + "weighting.tif") as src:
+with rasterio.open(weighting_path + "weighting.tif") as src:
     affine = src.transform
     array = src.read(1)
     df_zonal_stats = pd.DataFrame(zonal_stats(data500, array, affine=affine))
 
 # adding statistics back to original GeoDataFrame
 df_zonal_stats = df_zonal_stats.add_prefix('rank_')
-water_scored = pd.concat([water, df_zonal_stats], axis=1)
-water_scored = water_scored.drop(['rank_count'],axis=1)
-water_scored.to_file(PATH + PROJECT + "scored_water.shp")
+scored_water = pd.concat([water, df_zonal_stats], axis=1)
+scored_water = scored_water.drop(['rank_count'],axis=1)
+scored_water.to_file(weighting_path + "scored_water.shp")
 gpd.io.file.fiona.drvsupport.supported_drivers['LIBKML'] = 'rw'
 gpd.io.file.fiona.drvsupport.supported_drivers['KML'] = 'rw'
-water_scored.to_file(PATH + PROJECT + "scored_water.kml", driver='KML')
-water_csv = water_scored.drop(['geometry'],axis=1)
-water_csv.to_csv(PATH + PROJECT + "scored_water.csv")
+scored_water.to_file(weighting_path + "scored_water.kml", driver='KML')
+water_csv = scored_water.drop(['geometry'],axis=1)
+water_csv.to_csv(weighting_path + "scored_water.csv")
 
 
 # idea: use the function below or overlay below to calculate the scoring only over area that is not in the exclusion zone
