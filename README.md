@@ -1,2 +1,0 @@
-# Multi Criteria Analysis
-
