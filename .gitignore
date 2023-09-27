@@ -11,6 +11,7 @@ data_sources/
 *.qgz
 *.pbf
 *.geojson
+*.tif.*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
