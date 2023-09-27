@@ -15,7 +15,7 @@ from shapely.geometry import box
 from a_settings import *
 
 input_data_path = PATH + "00_input_data\\"
-data_download_path = PATH + "01_data_download\\"
+osm_data_path = PATH + "01_osm_data\\"
 
 # download the data with region name (cannot perform with large area)
 # osm_data = pyrosm.get_data(place_name)
@@ -23,7 +23,7 @@ data_download_path = PATH + "01_data_download\\"
 
 # download pbf in interested area from the website below
 # https://extract.bbbike.org/
-osm = pyrosm.OSM("data_sources\mozambique_part.osm.pbf")
+osm = pyrosm.OSM(input_data_path + "mozambique_part.osm.pbf")
 
 # https://wiki.openstreetmap.org/wiki/Map_features
 
@@ -31,52 +31,55 @@ osm = pyrosm.OSM("data_sources\mozambique_part.osm.pbf")
 boundary = osm.get_boundaries(boundary_type = "all")
 boundary = boundary.set_crs('epsg:4326')
 boundary = boundary.to_crs(epsg=EPSG)
-boundary.to_file(data_download_path + "boundary.shp")
-
-# waterbody cannot be extracted properly -> manually extraction with https://overpass-turbo.eu/ as geojson
-water = gpd.read_file(input_data_path + "water.geojson")
-water.to_crs(epsg=EPSG)
-water.to_file(data_download_path + "water.shp", driver='ESRI Shapefile')
+boundary.to_file(osm_data_path + "boundary.shp")
 
 # water = osm.get_data_by_custom_criteria(custom_filter={'natural':['water']}, filter_type="keep", keep_nodes=False, keep_ways=False, keep_relations=True)
 # # Check if water is None before proceeding
 # if water is not None:
 #     water = water.set_crs('epsg:4326')
 #     water = water.to_crs(epsg=EPSG)
-#     water.to_file(data_download_path + "water_osm.shp")
+#     water.to_file(osm_data_path + "water_osm.shp")
 # else:
 #     print("No water data found in the query.")
 
 # rivers
-river = osm.get_data_by_custom_criteria(custom_filter={'waterway':['river','dam']}, filter_type="keep", keep_nodes=False, keep_ways=True, keep_relations=True)
-if river is not None:
-    river = river.set_crs('epsg:4326')
-    river = river.to_crs(epsg=EPSG)
-    river = river.buffer(200)
-    river.to_file(data_download_path + "buffered_river.shp")
+rivers = osm.get_data_by_custom_criteria(custom_filter={'waterway':['river','dam']}, filter_type="keep", keep_nodes=False, keep_ways=True, keep_relations=True)
+if rivers is not None:
+    rivers = rivers.set_crs('epsg:4326')
+    rivers = rivers.to_crs(epsg=EPSG)
+    rivers = rivers.buffer(200)
+    rivers.to_file(osm_data_path + "buffered_rivers.shp")
 else:
     print("No river data found in the query.")
 
-#road
-road = osm.get_network(network_type="driving")
+#roads
+roads = osm.get_network(network_type="driving")
 # Check if driving is None before proceeding
-if road is not None:
-    road = road.set_crs('epsg:4326')
-    road = road.to_crs(epsg=EPSG)
-    road.to_file(data_download_path + "roads.shp")
+if roads is not None:
+    roads = roads.set_crs('epsg:4326')
+    roads = roads.to_crs(epsg=EPSG)
+    roads.to_file(osm_data_path + "roads.shp")
 else:
-    print("No driving data found in the query.")
+    print("No roads data found in the query.")
 
+# main roads
+main_roads = osm.get_data_by_custom_criteria(custom_filter={'highway':['trunk','primary','secondary']}, filter_type="keep", keep_nodes=False, keep_ways=True, keep_relations=False)
+if main_roads is not None:
+    main_roads = main_roads.set_crs('epsg:4326')
+    main_roads = main_roads.to_crs(epsg=EPSG)
+    main_roads.to_file(osm_data_path + "main_roads.shp")
+else:
+    print("No main roads data found in the query.")
 
 #substation
-substation = osm.get_data_by_custom_criteria(custom_filter={'power':['substation']}, filter_type="keep", keep_nodes=True, keep_ways=True, keep_relations=True)
+substations = osm.get_data_by_custom_criteria(custom_filter={'power':['substation']}, filter_type="keep", keep_nodes=True, keep_ways=True, keep_relations=True)
 # Check if substation is None before proceeding
-if substation is not None:
+if substations is not None:
     # Convert to the desired CRS if sub is not None
-    substation = substation.set_crs('epsg:4326')
-    substation = substation.to_crs(epsg=EPSG)
+    substations = substations.set_crs('epsg:4326')
+    substations = substations.to_crs(epsg=EPSG)
     
     # Save the data to a file
-    substation.to_file(data_download_path + "substation.shp")
+    substations.to_file(osm_data_path + "substations.shp")
 else:
-    print("No substation data found in the query.")
+    print("No substations data found in the query.")

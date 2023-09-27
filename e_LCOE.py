@@ -30,7 +30,7 @@ warnings.filterwarnings("ignore", message="Setting nodata to -999; specify nodat
 warnings.filterwarnings("ignore", message="Column names longer than 10 ")
 
 ####################### FILE PATHS #############################################
-data_download_path = PATH + "01_data_download\\"
+osm_data_path = PATH + "01_osm_data\\"
 filtering_path = PATH + "02_filtering\\"
 rasterizing_path = PATH + "03_rasterizing\\"
 exclusion_path = PATH + "04_exclusion\\"
@@ -39,7 +39,7 @@ proximity_path = PATH + "06_proximity\\"
 weighting_path = PATH + "07_weighting\\"
 LCOE_path = PATH + "08_LCOE\\"
 
-fp_boundary = data_download_path + "boundary.shp"
+fp_boundary = osm_data_path + "boundary.shp"
 ####################### FUNCTIONS ##############################################
 
 shp_driver = ogr.GetDriverByName("ESRI Shapefile")
@@ -120,7 +120,7 @@ water_cost[np.where(water_cost > 500)] = 110
 save_raster(water_cost, x_res, y_res, PIXEL_SIZE, PIXEL_SIZE, LCOE_path + "cost_water.tif", True, rasterizing_path + "boundary.tif", x_min, y_max)
 
 
-files_to_mosaic = glob.glob(data_download_path + "GLOBathy.tif")
+files_to_mosaic = glob.glob(osm_data_path + "GLOBathy.tif")
 gdal.Warp(LCOE_path + "GLOBathy_mosaic.tif", files_to_mosaic, format="GTiff", dstSRS=f'EPSG:{EPSG}', options=["COMPRESS=LZW", "TILED=YES"])
 
 mosaic_bathymetry = rasterio.open(LCOE_path + "GLOBathy_mosaic.tif")

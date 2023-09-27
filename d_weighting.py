@@ -24,7 +24,7 @@ warnings.filterwarnings("ignore", message="Setting nodata to -999; specify nodat
 warnings.filterwarnings("ignore", message="Column names longer than 10 ")
 
 ####################### FILE PATHS #############################################
-data_download_path = PATH + "01_data_download\\"
+osm_data_path = PATH + "01_osm_data\\"
 filtering_path = PATH + "02_filtering\\"
 rasterizing_path = PATH + "03_rasterizing\\"
 exclusion_path = PATH + "04_exclusion\\"
@@ -36,7 +36,7 @@ fp_boundary_tif = rasterizing_path + "boundary.tif"
 fp_land = "Data_Sources\\Land_cover\\C3S-LC-L4-LCCS-Map-300m-P1Y-2020-v2.1.1.nc"
 
 shp_driver = ogr.GetDriverByName("ESRI Shapefile")
-boundary_data = shp_driver.Open(data_download_path + "boundary.shp")
+boundary_data = shp_driver.Open(osm_data_path + "boundary.shp")
 boundary = boundary_data.GetLayer()
 
 x_min, x_max, y_min, y_max = boundary.GetExtent()
@@ -176,11 +176,11 @@ save_raster(weighting, x_res, y_res, PIXEL_SIZE, PIXEL_SIZE, weighting_path + "w
 
 
 # scoring
-water = gpd.read_file(data_download_path + "water.shp")
+water = gpd.read_file(osm_data_path + "water.shp")
 data500 = water.buffer(500)
-data500.to_file(data_download_path + "water500.shp")
+data500.to_file(osm_data_path + "water500.shp")
 
-data500 = gpd.read_file(data_download_path + "water500.shp")
+data500 = gpd.read_file(osm_data_path + "water500.shp")
 
 with rasterio.open(weighting_path + "weighting.tif") as src:
     affine = src.transform
