@@ -3,6 +3,7 @@ data_sources/
 
 # input geodata format
 *.tif
+*.tif.*
 *.cpg
 *dbf
 *.prj
@@ -11,7 +12,6 @@ data_sources/
 *.qgz
 *.pbf
 *.geojson
-*.tif.*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

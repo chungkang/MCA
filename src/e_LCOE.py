@@ -22,7 +22,7 @@ import warnings
 from a_settings import *
 
 # customized functions
-from custom_functions import *
+from src.functions.custom_functions import *
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=DeprecationWarning)

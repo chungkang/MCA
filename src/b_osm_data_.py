@@ -8,9 +8,7 @@ September 2023
 
 Description: Extracts data layers from OpenStreetMap
 """
-import geopandas as gpd
 import pyrosm
-from shapely.geometry import box
 
 from a_settings import *
 

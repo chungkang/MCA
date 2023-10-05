@@ -8,17 +8,12 @@ September 2023
 Description: Performs a site filtering and exclusion
 """
 import geopandas as gpd
-from shapely.geometry import box
 from osgeo import ogr
 import rasterio
-from rasterio.features import geometry_mask
-from shapely.geometry import shape
-import numpy as np
 import warnings
-import scipy.ndimage as ndimage
 
 from a_settings import *
-from custom_functions import *
+from src.functions.custom_functions import *
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=DeprecationWarning)

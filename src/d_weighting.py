@@ -16,7 +16,7 @@ from rasterstats import zonal_stats
 import pandas as pd
 
 from a_settings import *
-from custom_functions import *
+from src.functions.custom_functions import *
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=DeprecationWarning)

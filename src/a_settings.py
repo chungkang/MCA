@@ -2,9 +2,11 @@
 """
 Created by Kimberly Mason
 November 2022
+
+Modified by Chungkang Choi
+September 2023
 """
-# Public
-PATH = "projects\\" # path to Projects folder
+PATH = "..\\data\\" # path to input/output data
 
 # Search https://nominatim.openstreetmap.org/ui/search.html for the place name,
 # only necessary when using the Data_Download script to extract data from OpenStreetMap
