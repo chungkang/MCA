@@ -1,40 +1,41 @@
 import pandas as pd
 import rasterio
+import numpy as np
 
 directory_path = r'data\\step1_input_data\\south_area\\'
-excel_path = directory_path + r'MCA_criteria_template.xlsx'
+input_excel_path = directory_path + r'MCA_criteria_template.xlsx'
 
-df = pd.read_excel(excel_path)
+df_input_excel = pd.read_excel(input_excel_path)
 
+# Filter DataFrame for AOI, Include, and Exclude
 # AOI dafa frame
-AOI_df = df[df['AOI'] == 1]
-# Use the first row as the base raster for calculation
-AOI_file_path = directory_path + AOI_df.iloc[0]['file_name']
+df_AOI = df_input_excel[df_input_excel['AOI'] == 1]
 
 # Filter rows where are AOI, include, exclude
-scored_df = df[(df['AOI'] == 1) |(df['include'] != 1) | (df['exclude'] != 1)]
+scored_df = df_input_excel[(df_input_excel['AOI'] == 1) | (df_input_excel['include'] != 1) | (df_input_excel['exclude'] != 1)]
 
+# Calculate the weight of layers
 # Calculate the sum of layer_weight for filtered rows
 total_layer_weight = scored_df['layer_weight'].sum()
 
 # Add a new column 'layer_weight_calculation' with the calculated values
-df['layer_weight_rate'] = (df['layer_weight'] / total_layer_weight).round(3)
-print(df)
+df_input_excel['layer_weight_rate'] = (df_input_excel['layer_weight'] / total_layer_weight).round(3)
+print(df_input_excel)
 
 # x, y resolution 과 extend 가 같은지 확인해서 안되면 에러메시지
 
-with rasterio.open(AOI_file_path) as AOI_dataset:
+with rasterio.open(directory_path + df_AOI.iloc[0]['file_name']) as AOI_dataset:
     AOI_raster_value = AOI_dataset.read(1).astype(float)
 
 # filtering scored layers: layer_weight is not null
-scored_layers_df = df[df['layer_weight'].notna()]
+df_scored_layers = df_input_excel[df_input_excel['layer_weight'].notna()]
 
 # filtering non-scored layers: layer_weight is null (AHOI, include, exclude)
-nonscored_layers_df = df[df['layer_weight'].isna()]
+df_nonscored_layers = df_input_excel[df_input_excel['layer_weight'].isna()]
 
 # calculate layer weight
 # Iterate over each row in the DataFrame
-for index, row in scored_layers_df.iterrows():
+for index, row in df_scored_layers.iterrows():
     # Access values in each row
     file_path = directory_path + row['file_name']
 
@@ -49,7 +50,7 @@ for index, row in scored_layers_df.iterrows():
 
 # calculate AOI, Include, Exclude
 # Iterate over each row in the DataFrame
-for index, row in nonscored_layers_df.iterrows():
+for index, row in df_nonscored_layers.iterrows():
     # Access values in each row
     file_path = directory_path + row['file_name']
     include = row['include']
@@ -74,8 +75,8 @@ for index, row in nonscored_layers_df.iterrows():
 print('result_MCA final:')
 print(AOI_raster_value)
 
-# smaller than 1 means NoData / value shouldn't be 
-no_data_value = total_layer_weight
+# smaller than 1 means NoData
+no_data_value = 0
 AOI_raster_value[AOI_raster_value < 1] = no_data_value
 
 with rasterio.open(AOI_file_path) as AOI_dataset:
