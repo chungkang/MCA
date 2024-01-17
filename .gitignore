@@ -5,13 +5,15 @@ data_sources/
 *.tif
 *.tif.*
 *.cpg
-*dbf
+*.dbf
 *.prj
 *.shp
 *.shx
 *.qgz
 *.pbf
 *.geojson
+*.qix
+*.qmd
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

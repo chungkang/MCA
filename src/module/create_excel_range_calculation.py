@@ -30,10 +30,14 @@ def list_files(directory, extensions):
                         'include': None,
                         'exclude': None,
                         'layer_weight': None,
+                        'most_suitable': None,
+                        'suitable': None,
+                        'least_suitable': None,
+                        'exclusive_range': None
                     }
     return file_dict
 
-directory_path = r'data\\step1_input_data\\entire_area\\'
+directory_path = r'data\\step7\\entire_area\\'
 extensions = ['.tif', '.shp']
  
 files = list_files(directory_path, extensions)
@@ -54,8 +58,12 @@ df_transposed.columns = [
                             'include',
                             'exclude',
                             'layer_weight',
+                            'most_suitable',
+                            'suitable',
+                            'least_suitable',
+                            'exclusive_range'
                         ]
 
 # save excel
-excel_path = directory_path + r'MCA_criteria_template.xlsx'
+excel_path = directory_path + r'range_criteria_template.xlsx'
 df_transposed.to_excel(excel_path, index=False)

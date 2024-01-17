@@ -33,7 +33,7 @@ def list_files(directory, extensions):
                     }
     return file_dict
 
-directory_path = r'data\\step1_input_data\\entire_area\\'
+directory_path = r'data\\step8\\entire_area\\'
 extensions = ['.tif', '.shp']
 
 files = list_files(directory_path, extensions)
