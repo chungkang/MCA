@@ -14,6 +14,7 @@ data_sources/
 *.geojson
 *.qix
 *.qmd
+.xlsx
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
