@@ -13,28 +13,28 @@ input_excel_path = path_read + r'step2_excel_template.xlsx'
 # create panda data frame for each purpose
 df_input_excel = pd.read_excel(input_excel_path)
 
-# '.shp' 및 '.geojson' 파일 처리
+#  process '.shp', '.geojson' files
 shp_geojson_df = df_input_excel[df_input_excel['file_name'].str.lower().str.endswith(('.shp', '.geojson'))]
 
 for idx, row in shp_geojson_df.iterrows():
     if row['source_CRS'] != row['target_CRS']:
-        gdf = gpd.read_file(os.path.join(path_data, row['file_name']))  # 경로 추가
+        gdf = gpd.read_file(os.path.join(path_data, row['file_name']))  # add path
         
-        # CRS 변환
+        # convert CRS to EPSG:3857
         gdf = gdf.to_crs(row['target_CRS'])
         
-        output_file_name = os.path.splitext(row['file_name'])[0] + '_CRS.shp'  # 파일 이름 수정
-        output_file_path = os.path.join(path_write, output_file_name)  # 경로 추가
-        gdf.to_file(output_file_path, driver='ESRI Shapefile')  # Shapefile로 저장
+        output_file_name = os.path.splitext(row['file_name'])[0] + '_EPSG3857.shp'  # change file name
+        output_file_path = os.path.join(path_write, output_file_name)  # add path
+        gdf.to_file(output_file_path, driver='ESRI Shapefile')  # save as Shapefile
 
-# '.tif' 파일 처리
+# process '.tif' file
 tif_df = df_input_excel[df_input_excel['file_name'].str.lower().str.endswith('.tif')]
 
 for idx, row in tif_df.iterrows():
     if row['source_CRS'] != row['target_CRS']:
-        input_file_path = os.path.join(path_data, row['file_name'])  # 경로 추가
-        output_file_name = os.path.splitext(row['file_name'])[0] + '_CRS.tif'  # 파일 이름 수정
-        output_file_path = os.path.join(path_write, output_file_name)  # 경로 추가
+        input_file_path = os.path.join(path_data, row['file_name'])  # add path
+        output_file_name = os.path.splitext(row['file_name'])[0] + '_EPSG3857.tif'  # change file name
+        output_file_path = os.path.join(path_write, output_file_name)  # add path
         with rasterio.open(input_file_path) as src:
             transform, width, height = calculate_default_transform(src.crs, row['target_CRS'], src.width, src.height, *src.bounds)
             kwargs = src.meta.copy()
