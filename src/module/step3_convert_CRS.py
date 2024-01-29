@@ -13,6 +13,9 @@ input_excel_path = input_excel_path + r'step2_excel_template.xlsx'
 # create panda data frame for each purpose
 df_input_excel = pd.read_excel(input_excel_path)
 
+# Initialize a list to keep track of processed files for the Excel output
+processed_files = []
+
 #  process '.shp', '.geojson' files
 shp_geojson_df = df_input_excel[df_input_excel['file_name'].str.lower().str.endswith(('.shp', '.geojson'))]
 
@@ -22,16 +25,21 @@ for idx, row in shp_geojson_df.iterrows():
     # convert CRS
     if row['source_CRS'] != row['target_CRS']:
         gdf = gdf.to_crs(row['target_CRS'])
-        output_file_name = os.path.splitext(row['file_name'])[0] + '_CRS.shp'  # change file name
-        output_file_path = os.path.join(output_path, output_file_name)  # add path
-        gdf.to_file(output_file_path, driver='ESRI Shapefile')  # save as Shapefile
 
     # only rename and save as shape file
-    else:
-        output_file_name = os.path.splitext(row['file_name'])[0] + '_CRS.shp'  # change file name
-        output_file_path = os.path.join(output_path, output_file_name)  # add path
-        gdf.to_file(output_file_path, driver='ESRI Shapefile')  # save as Shapefile
+    output_file_name = os.path.splitext(row['file_name'])[0] + '_CRS.shp'  # change file name
+    output_file_path = os.path.join(output_path, output_file_name)  # add path
+    gdf.to_file(output_file_path, driver='ESRI Shapefile')  # save as Shapefile
 
+    # Add file details to the processed_files list
+    processed_files.append({
+        'file_name': output_file_name,
+        'source_resolution': None,  # Shapefiles do not have a resolution
+        'target_resolution': None,  # Target resolution is not applicable here
+        'source_CRS': row['source_CRS'],
+        'target_CRS': row['target_CRS'],
+        'AOI': row['AOI']
+    })
 
 # process '.tif' file
 tif_df = df_input_excel[df_input_excel['file_name'].str.lower().str.endswith('.tif')]
@@ -59,3 +67,23 @@ for idx, row in tif_df.iterrows():
                         resampling=Resampling.nearest)
     else:
         shutil.copy(input_file_path, output_file_path)
+    
+    # Add file details to the processed_files list
+    processed_files.append({
+        'file_name': output_file_name,
+        'source_resolution': row['source_resolution(m)'],
+        'target_resolution': row['target_resolution(m)'],
+        'source_CRS': row['source_CRS'],
+        'target_CRS': row['target_CRS'],
+        'AOI': row['AOI']
+    })
+
+
+# Create a DataFrame from the processed_files list
+df_processed = pd.DataFrame(processed_files)
+
+# Define the path for the output Excel file
+output_excel_path = os.path.join(output_path, 'step3_excel_template.xlsx')
+
+# Save the DataFrame to an Excel file
+df_processed.to_excel(output_excel_path, index=False)
