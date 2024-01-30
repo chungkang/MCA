@@ -1,3 +1,10 @@
+"""
+Created by Chungkang Choi
+January 2024
+
+Description: Create Excel Template
+"""
+
 import os
 import pandas as pd
 import rasterio

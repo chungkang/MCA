@@ -1,3 +1,10 @@
+"""
+Created by Chungkang Choi
+January 2024
+
+Description: Convert CRS
+"""
+
 import os
 import pandas as pd
 import geopandas as gpd
@@ -34,8 +41,8 @@ for idx, row in shp_geojson_df.iterrows():
     # Add file details to the processed_files list
     processed_files.append({
         'file_name': output_file_name,
-        'source_resolution': None,  # Shapefiles do not have a resolution
-        'target_resolution': row['target_resolution(m)'],
+        'source_resolution(m)': None,  # Shapefiles do not have a resolution
+        'target_resolution(m)': row['target_resolution(m)'],
         'source_CRS': row['source_CRS'],
         'target_CRS': row['target_CRS'],
         'AOI': row['AOI']
@@ -71,8 +78,8 @@ for idx, row in tif_df.iterrows():
     # Add file details to the processed_files list
     processed_files.append({
         'file_name': output_file_name,
-        'source_resolution': row['source_resolution(m)'],
-        'target_resolution': row['target_resolution(m)'],
+        'source_resolution(m)': row['source_resolution(m)'],
+        'target_resolution(m)': row['target_resolution(m)'],
         'source_CRS': row['source_CRS'],
         'target_CRS': row['target_CRS'],
         'AOI': row['AOI']
