@@ -6,14 +6,9 @@ Description: Rasterize Vector + Equalize Resolution
 """
 import os
 import pandas as pd
-import geopandas as gpd
 import rasterio
-from rasterio.features import rasterize
-from rasterio.transform import from_origin
 from rasterio.warp import calculate_default_transform, reproject, Resampling
 from osgeo import gdal, ogr, osr
-
-
 
 def rasterize_vector(input_vector_path, output_raster_path, pixel_size, target_crs, no_data_value=0, burn_value=1):
     # Read vector data
@@ -48,8 +43,6 @@ def rasterize_vector(input_vector_path, output_raster_path, pixel_size, target_c
     band = None
     target_ds = None
     vector_ds = None
-
-
 
 
 input_path = r'data\\step3\\'
