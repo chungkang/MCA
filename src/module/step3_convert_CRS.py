@@ -35,7 +35,7 @@ for idx, row in shp_geojson_df.iterrows():
     processed_files.append({
         'file_name': output_file_name,
         'source_resolution': None,  # Shapefiles do not have a resolution
-        'target_resolution': None,  # Target resolution is not applicable here
+        'target_resolution': row['target_resolution(m)'],
         'source_CRS': row['source_CRS'],
         'target_CRS': row['target_CRS'],
         'AOI': row['AOI']
