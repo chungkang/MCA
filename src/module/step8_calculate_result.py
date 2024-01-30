@@ -1,3 +1,10 @@
+"""
+Created by Chungkang Choi
+January 2024
+
+Description: Calculate Result
+"""
+
 import pandas as pd
 import rasterio
 import numpy as np
