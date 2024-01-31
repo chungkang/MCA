@@ -83,7 +83,25 @@ for idx, row in tif_df.iterrows():
         'source_CRS': row['source_CRS'],
         'target_CRS': row['target_CRS'],
         'AOI': row['AOI'],
+        'exclusion': None
     })
+
+    # Check for exclusion
+    if row.get('exclusion') == 1:
+        exclusion_output_file_name = os.path.splitext(row['file_name'])[0] + '_exclusion.tif'
+        exclusion_output_file_path = os.path.join(output_path, exclusion_output_file_name)
+        shutil.copy(input_file_path, exclusion_output_file_path)
+
+        # Add exclusion file info to processed files
+        processed_files.append({
+            'file_name': exclusion_output_file_name,
+            'source_resolution(m)': row['source_resolution(m)'],
+            'target_resolution(m)': row['target_resolution(m)'],
+            'source_CRS': row['source_CRS'],
+            'target_CRS': row['target_CRS'],
+            'AOI': row['AOI'],
+            'exclusion': row['exclusion']
+        })
 
 # Create a DataFrame from the processed_files list
 df_processed = pd.DataFrame(processed_files)
