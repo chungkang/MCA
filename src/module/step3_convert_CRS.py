@@ -61,7 +61,9 @@ for idx, row in tif_df.iterrows():
             transform, width, height = calculate_default_transform(src.crs, row['target_CRS'], src.width, src.height, *src.bounds)
             kwargs = src.meta.copy()
             kwargs.update({'crs': row['target_CRS'], 'transform': transform, 'width': width, 'height': height})
-            
+            # Define compression options
+            kwargs.update({'tiled': True, 'compress': 'DEFLATE', 'predictor': 1, 'zlevel': 9})
+
             with rasterio.open(output_file_path, 'w', **kwargs) as dst:
                 for i in range(1, src.count + 1):
                     reproject(
