@@ -12,87 +12,58 @@ import rasterio
 from rasterio.warp import calculate_default_transform, reproject, Resampling
 import shutil
 
-input_data_path = r'data\\step1\\'
-input_excel_path = r'data\\step2\\'
-output_path = r'data\\step3\\'
-input_excel_path = input_excel_path + r'step2_excel_template.xlsx'
+def convert_crs(input_file_path, output_file_path, source_crs, target_crs, is_raster):
+    if is_raster:
+        with rasterio.open(input_file_path) as src:
+            if source_crs != target_crs:
+                transform, width, height = calculate_default_transform(src.crs, target_crs, src.width, src.height, *src.bounds)
+                kwargs = src.meta.copy()
+                kwargs.update({'crs': target_crs, 'transform': transform, 'width': width, 'height': height})
+                with rasterio.open(output_file_path, 'w', **kwargs) as dst:
+                    for i in range(1, src.count + 1):
+                        reproject(
+                            source=rasterio.band(src, i),
+                            destination=rasterio.band(dst, i),
+                            src_transform=src.transform,
+                            src_crs=src.crs,
+                            dst_transform=transform,
+                            dst_crs=target_crs,
+                            resampling=Resampling.nearest)
+            else:
+                shutil.copy(input_file_path, output_file_path)
+    else:
+        gdf = gpd.read_file(input_file_path)
+        if source_crs != target_crs:
+            gdf = gdf.to_crs(target_crs)
+        gdf.to_file(output_file_path, driver='ESRI Shapefile')
 
-# create panda data frame for each purpose
+def process_files(df_input_excel, input_data_path, output_path):
+    processed_files = []
+
+    for idx, row in df_input_excel.iterrows():
+        input_file_path = os.path.join(input_data_path, row['file_name'])
+        file_ext = '.shp' if os.path.splitext(row['file_name'])[1].lower() in ['.geojson', '.shp'] else os.path.splitext(row['file_name'])[1]
+        output_file_name = os.path.splitext(row['file_name'])[0] + '_CRS' + file_ext
+        output_file_path = os.path.join(output_path, output_file_name)
+
+        is_raster = file_ext == '.tif'
+        convert_crs(input_file_path, output_file_path, row['source_CRS'], row['target_CRS'], is_raster)
+
+        processed_files.append({
+            'file_name': output_file_name,
+            'source_CRS': row['source_CRS'],
+            'target_CRS': row['target_CRS'],
+            'source_resolution(m)': row['source_resolution(m)'] if is_raster else None,
+            'target_resolution(m)': row['target_resolution(m)'],
+            'AOI': row['AOI']
+        })
+
+    return processed_files
+
+input_excel_path = os.path.join('data', 'step2', 'step2_excel_template.xlsx')
 df_input_excel = pd.read_excel(input_excel_path)
 
-# Initialize a list to keep track of processed files for the Excel output
-processed_files = []
-
-#  process '.shp', '.geojson' files
-shp_geojson_df = df_input_excel[df_input_excel['file_name'].str.lower().str.endswith(('.shp', '.geojson'))]
-
-for idx, row in shp_geojson_df.iterrows():
-    gdf = gpd.read_file(os.path.join(input_data_path, row['file_name']))  # add path
-
-    # convert CRS
-    if row['source_CRS'] != row['target_CRS']:
-        gdf = gdf.to_crs(row['target_CRS'])
-
-    # only rename and save as shape file
-    output_file_name = os.path.splitext(row['file_name'])[0] + '_CRS.shp'  # change file name
-    output_file_path = os.path.join(output_path, output_file_name)  # add path
-    gdf.to_file(output_file_path, driver='ESRI Shapefile')  # save as Shapefile
-
-    # Add file details to the processed_files list
-    processed_files.append({
-        'file_name': output_file_name,
-        'source_resolution(m)': None,  # Shapefiles do not have a resolution
-        'target_resolution(m)': row['target_resolution(m)'],
-        'source_CRS': row['source_CRS'],
-        'target_CRS': row['target_CRS'],
-        'AOI': row['AOI']
-    })
-
-# process '.tif' file
-tif_df = df_input_excel[df_input_excel['file_name'].str.lower().str.endswith('.tif')]
-
-for idx, row in tif_df.iterrows():
-    input_file_path = os.path.join(input_data_path, row['file_name'])  # add path
-    output_file_name = os.path.splitext(row['file_name'])[0] + '_CRS.tif'  # change file name
-    output_file_path = os.path.join(output_path, output_file_name)  # add path
-    
-    if row['source_CRS'] != row['target_CRS']:
-        with rasterio.open(input_file_path) as src:
-            transform, width, height = calculate_default_transform(src.crs, row['target_CRS'], src.width, src.height, *src.bounds)
-            kwargs = src.meta.copy()
-            kwargs.update({'crs': row['target_CRS'], 'transform': transform, 'width': width, 'height': height})
-            # Define compression options
-            kwargs.update({'tiled': True, 'compress': 'DEFLATE', 'predictor': 1, 'zlevel': 9})
-
-            with rasterio.open(output_file_path, 'w', **kwargs) as dst:
-                for i in range(1, src.count + 1):
-                    reproject(
-                        source=rasterio.band(src, i),
-                        destination=rasterio.band(dst, i),
-                        src_transform=src.transform,
-                        src_crs=src.crs,
-                        dst_transform=transform,
-                        dst_crs=row['target_CRS'],
-                        resampling=Resampling.nearest)
-    else:
-        shutil.copy(input_file_path, output_file_path)
-    
-    # Add file details to the processed_files list
-    processed_files.append({
-        'file_name': output_file_name,
-        'source_resolution(m)': row['source_resolution(m)'],
-        'target_resolution(m)': row['target_resolution(m)'],
-        'source_CRS': row['source_CRS'],
-        'target_CRS': row['target_CRS'],
-        'AOI': row['AOI']
-    })
-
-
-# Create a DataFrame from the processed_files list
+processed_files = process_files(df_input_excel, os.path.join('data', 'step1'), os.path.join('data', 'step3'))
 df_processed = pd.DataFrame(processed_files)
-
-# Define the path for the output Excel file
-output_excel_path = os.path.join(output_path, 'step3_excel_template.xlsx')
-
-# Save the DataFrame to an Excel file
+output_excel_path = os.path.join('data', 'step3', 'step3_excel_template.xlsx')
 df_processed.to_excel(output_excel_path, index=False)

@@ -87,6 +87,7 @@ for idx, row in shp_df.iterrows():
         'source_CRS': row['source_CRS'],
         'target_CRS': row['target_CRS'],
         'AOI': row['AOI'],
+        'exclusion': None,
         'proximity': None
     })
 
@@ -131,6 +132,7 @@ for idx, row in tif_df.iterrows():
         'source_CRS': row['source_CRS'],
         'target_CRS': row['target_CRS'],
         'AOI': row['AOI'],
+        'exclusion': None,
         'proximity': None
     })
 
