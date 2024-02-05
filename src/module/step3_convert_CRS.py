@@ -60,10 +60,14 @@ def process_files(df_input_excel, input_data_path, output_path):
 
     return processed_files
 
-input_excel_path = os.path.join('data', 'step2', 'step2_excel_template.xlsx')
+input_path = r'data\\step1\\'
+output_path = r'data\\step3\\'
+setting_excel_path = r'data\\setting_excel\\'
+input_excel_path = setting_excel_path + r'step2_excel_template.xlsx'
+output_excel_path = setting_excel_path + r'step3_excel_template.xlsx'
+
 df_input_excel = pd.read_excel(input_excel_path)
 
-processed_files = process_files(df_input_excel, os.path.join('data', 'step1'), os.path.join('data', 'step3'))
+processed_files = process_files(df_input_excel, input_path, output_path)
 df_processed = pd.DataFrame(processed_files)
-output_excel_path = os.path.join('data', 'step3', 'step3_excel_template.xlsx')
 df_processed.to_excel(output_excel_path, index=False)

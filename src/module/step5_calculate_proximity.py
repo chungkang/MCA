@@ -51,7 +51,9 @@ def calculate_proximity(input_raster_path, output_raster_path, max_distance):
 
 input_path = r'data\\step4\\'
 output_path = r'data\\step5\\'
-input_excel_path = input_path + r'step4_excel_template.xlsx'
+setting_excel_path = r'data\\setting_excel\\'
+input_excel_path = setting_excel_path + r'step4_excel_template.xlsx'
+output_excel_path = setting_excel_path + r'step5_excel_template.xlsx'
 
 # Read the input Excel file
 df_input_excel = pd.read_excel(input_excel_path)
@@ -105,9 +107,6 @@ for idx, row in tif_df.iterrows():
 
 # Create a DataFrame from the processed_files list
 df_processed = pd.DataFrame(processed_files)
-
-# Define the path for the output Excel file
-output_excel_path = os.path.join(output_path, 'step5_excel_template.xlsx')
 
 # Save the DataFrame to an Excel file
 df_processed.to_excel(output_excel_path, index=False)

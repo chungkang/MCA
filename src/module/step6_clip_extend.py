@@ -46,7 +46,9 @@ def clip_extend(input_raster_path, output_raster_path, aoi_extent):
 
 input_path = r'data\\step5\\'
 output_path = r'data\\step6\\'
-input_excel_path = input_path + r'step5_excel_template.xlsx'
+setting_excel_path = r'data\\setting_excel\\'
+input_excel_path = setting_excel_path + r'step5_excel_template.xlsx'
+output_excel_path = setting_excel_path + r'step6_excel_template.xlsx'
 
 # Read the input Excel file
 df_input_excel = pd.read_excel(input_excel_path)
@@ -61,7 +63,7 @@ aoi_file_name = AOI_df.iloc[0]['file_name']  # Assuming first row contains the A
 aoi_file_path = os.path.join(input_path, aoi_file_name)
 aoi_extent = get_aoi_extent(aoi_file_path)
 
-# Process '.tif' files for proximity calculation
+# Process '.tif' files for clipping extent
 for idx, row in tif_df.iterrows():
     input_file_path = os.path.join(input_path, row['file_name'])
 
@@ -97,9 +99,6 @@ for idx, row in tif_df.iterrows():
 
 # Create a DataFrame from the processed_files list
 df_processed = pd.DataFrame(processed_files)
-
-# Define the path for the output Excel file
-output_excel_path = os.path.join(output_path, 'step6_excel_template.xlsx')
 
 # Save the DataFrame to an Excel file
 df_processed.to_excel(output_excel_path, index=False)
