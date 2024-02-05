@@ -74,8 +74,8 @@ shp_df = df_input_excel[df_input_excel['file_name'].str.lower().str.endswith('.s
 aoi_row = df_input_excel[df_input_excel['AOI'] == 1]
 
 for idx, row in shp_df.iterrows():
-    input_vector_path = os.path.join(input_path, row['file_name'])
-    output_raster_path = os.path.join(output_path, os.path.splitext(row['file_name'])[0] + '_rasterized.tif')
+    input_vector_path = input_path + row['file_name']
+    output_raster_path = output_path + os.path.splitext(row['file_name'])[0] + '_rasterized.tif'
     pixel_size = row['target_resolution(m)']
     target_crs = int(row['target_CRS'].split(':')[-1])  # Assuming the CRS is given in 'EPSG:xxxx' format
 
@@ -97,12 +97,12 @@ for idx, row in shp_df.iterrows():
 tif_df = df_input_excel[df_input_excel['file_name'].str.lower().str.endswith('.tif')]
 
 for idx, row in tif_df.iterrows():
-    input_file_path = os.path.join(input_path, row['file_name'])
+    input_file_path = input_path + row['file_name']
 
     # when resolutions of input and output are different, reprocessing and saving
     if row['source_resolution(m)'] is not None and row['source_resolution(m)'] != row['target_resolution(m)']:    
         output_file_name = os.path.splitext(row['file_name'])[0] + '_equalized.tif'
-        output_file_path = os.path.join(output_path, output_file_name)
+        output_file_path = output_path + output_file_name
     
         with rasterio.open(input_file_path) as src:
             transform, width, height = calculate_default_transform(
@@ -123,7 +123,7 @@ for idx, row in tif_df.iterrows():
     # copy input file as output file
     else:
         output_file_name = row['file_name']
-        output_file_path = os.path.join(output_path, output_file_name)
+        output_file_path = output_path + output_file_name
         shutil.copy(input_file_path, output_file_path)
 
     # add file info to excel

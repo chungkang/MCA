@@ -65,16 +65,16 @@ tif_df = df_input_excel[df_input_excel['file_name'].str.lower().str.endswith('.t
 
 # Process '.tif' files for proximity calculation
 for idx, row in tif_df.iterrows():
-    input_file_path = os.path.join(input_path, row['file_name'])
+    input_file_path = input_path + row['file_name']
   
     if row['proximity'] == 1:
         output_file_name = os.path.splitext(row['file_name'])[0] + '_proximity.tif'
-        output_file_path = os.path.join(output_path, output_file_name)
+        output_file_path = output_path + output_file_name
         calculate_proximity(input_file_path, output_file_path, 50000)  # 50 km in meters
    
     else:
         output_file_name = row['file_name']
-        output_file_path = os.path.join(output_path, output_file_name)
+        output_file_path = output_path + output_file_name
         shutil.copy(input_file_path, output_file_path)
 
     # add file info to excel
@@ -91,7 +91,7 @@ for idx, row in tif_df.iterrows():
     # Check for exclusion
     if row.get('exclusion') == 1:
         exclusion_output_file_name = os.path.splitext(row['file_name'])[0] + '_exclusion.tif'
-        exclusion_output_file_path = os.path.join(output_path, exclusion_output_file_name)
+        exclusion_output_file_path = output_path + exclusion_output_file_name
         shutil.copy(input_file_path, exclusion_output_file_path)
 
         # Add exclusion file info to processed files

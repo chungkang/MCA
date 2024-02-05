@@ -15,7 +15,7 @@ def get_file_list(directory, file_extensions):
     file_list = []
 
     for filename in os.listdir(directory):
-        file_path = os.path.join(directory, filename)
+        file_path = directory + filename
         if filename.endswith(tuple(file_extensions)):
             file_info = {'file_name': filename, 'source_CRS': None, 'target_CRS': None, 'source_resolution(m)': None, 'target_resolution(m)': None, 'AOI': None}
             

@@ -41,10 +41,10 @@ def process_files(df_input_excel, input_data_path, output_path):
     processed_files = []
 
     for idx, row in df_input_excel.iterrows():
-        input_file_path = os.path.join(input_data_path, row['file_name'])
+        input_file_path = input_data_path + row['file_name']
         file_ext = '.shp' if os.path.splitext(row['file_name'])[1].lower() in ['.geojson', '.shp'] else os.path.splitext(row['file_name'])[1]
         output_file_name = os.path.splitext(row['file_name'])[0] + '_CRS' + file_ext
-        output_file_path = os.path.join(output_path, output_file_name)
+        output_file_path = output_path + output_file_name
 
         is_raster = file_ext == '.tif'
         convert_crs(input_file_path, output_file_path, row['source_CRS'], row['target_CRS'], is_raster)

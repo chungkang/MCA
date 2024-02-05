@@ -60,22 +60,22 @@ tif_df = df_input_excel[df_input_excel['file_name'].str.lower().str.endswith('.t
 
 AOI_df = tif_df[tif_df['AOI'] == 1]
 aoi_file_name = AOI_df.iloc[0]['file_name']  # Assuming first row contains the AOI raster
-aoi_file_path = os.path.join(input_path, aoi_file_name)
+aoi_file_path = input_path + aoi_file_name
 aoi_extent = get_aoi_extent(aoi_file_path)
 
 # Process '.tif' files for clipping extent
 for idx, row in tif_df.iterrows():
-    input_file_path = os.path.join(input_path, row['file_name'])
+    input_file_path = input_path + row['file_name']
 
     if row['AOI'] == 1:
         output_file_name = row['file_name']
-        output_file_path = os.path.join(output_path, output_file_name)
+        output_file_path = output_path + output_file_name
         shutil.copy(input_file_path, output_file_path)
 
     else:
         # Define paths for AOI and output raster
         output_file_name = os.path.splitext(row['file_name'])[0] + '_clip.tif'
-        output_file_path = os.path.join(output_path, output_file_name)
+        output_file_path = output_path + output_file_name
         aoi_raster_path = input_file_path  # Assuming AOI raster is the same as input
 
         # Perform clipping
