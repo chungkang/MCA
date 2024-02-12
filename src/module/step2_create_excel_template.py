@@ -9,7 +9,6 @@ import os
 import pandas as pd
 import rasterio
 import geopandas as gpd
-from shapely.geometry import box
 
 def get_file_list(directory, file_extensions):
     file_list = []
