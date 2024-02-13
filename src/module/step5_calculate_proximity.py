@@ -48,65 +48,68 @@ def calculate_proximity(input_raster_path, output_raster_path, max_distance):
     out_ds = None
     print(f"Proximity calculation completed for {input_raster_path}")
 
+def main():
+    input_path = r'data\\step4\\'
+    output_path = r'data\\step5\\'
+    setting_excel_path = r'data\\setting_excel\\'
+    input_excel_path = setting_excel_path + r'step4_excel_template.xlsx'
+    output_excel_path = setting_excel_path + r'step5_excel_template.xlsx'
 
-input_path = r'data\\step4\\'
-output_path = r'data\\step5\\'
-setting_excel_path = r'data\\setting_excel\\'
-input_excel_path = setting_excel_path + r'step4_excel_template.xlsx'
-output_excel_path = setting_excel_path + r'step5_excel_template.xlsx'
+    # Read the input Excel file
+    df_input_excel = pd.read_excel(input_excel_path)
 
-# Read the input Excel file
-df_input_excel = pd.read_excel(input_excel_path)
+    # Initialize a list to keep track of processed files for the Excel output
+    processed_files = []
 
-# Initialize a list to keep track of processed files for the Excel output
-processed_files = []
+    tif_df = df_input_excel[df_input_excel['file_name'].str.lower().str.endswith('.tif')]
 
-tif_df = df_input_excel[df_input_excel['file_name'].str.lower().str.endswith('.tif')]
+    # Process '.tif' files for proximity calculation
+    for idx, row in tif_df.iterrows():
+        input_file_path = input_path + row['file_name']
+    
+        if row['proximity'] == 1:
+            output_file_name = os.path.splitext(row['file_name'])[0] + '_proximity.tif'
+            output_file_path = output_path + output_file_name
+            calculate_proximity(input_file_path, output_file_path, 50000)  # 50 km in meters
+    
+        else:
+            output_file_name = row['file_name']
+            output_file_path = output_path + output_file_name
+            shutil.copy(input_file_path, output_file_path)
 
-# Process '.tif' files for proximity calculation
-for idx, row in tif_df.iterrows():
-    input_file_path = input_path + row['file_name']
-  
-    if row['proximity'] == 1:
-        output_file_name = os.path.splitext(row['file_name'])[0] + '_proximity.tif'
-        output_file_path = output_path + output_file_name
-        calculate_proximity(input_file_path, output_file_path, 50000)  # 50 km in meters
-   
-    else:
-        output_file_name = row['file_name']
-        output_file_path = output_path + output_file_name
-        shutil.copy(input_file_path, output_file_path)
-
-    # add file info to excel
-    processed_files.append({
-        'file_name': output_file_name,
-        'source_resolution(m)': row['source_resolution(m)'],
-        'target_resolution(m)': row['target_resolution(m)'],
-        'source_CRS': row['source_CRS'],
-        'target_CRS': row['target_CRS'],
-        'AOI': row['AOI'],
-        'exclusion': None
-    })
-
-    # Check for exclusion
-    if row.get('exclusion') == 1:
-        exclusion_output_file_name = os.path.splitext(row['file_name'])[0] + '_exclusion.tif'
-        exclusion_output_file_path = output_path + exclusion_output_file_name
-        shutil.copy(input_file_path, exclusion_output_file_path)
-
-        # Add exclusion file info to processed files
+        # add file info to excel
         processed_files.append({
-            'file_name': exclusion_output_file_name,
+            'file_name': output_file_name,
             'source_resolution(m)': row['source_resolution(m)'],
             'target_resolution(m)': row['target_resolution(m)'],
             'source_CRS': row['source_CRS'],
             'target_CRS': row['target_CRS'],
             'AOI': row['AOI'],
-            'exclusion': row['exclusion']
+            'exclusion': None
         })
 
-# Create a DataFrame from the processed_files list
-df_processed = pd.DataFrame(processed_files)
+        # Check for exclusion
+        if row.get('exclusion') == 1:
+            exclusion_output_file_name = os.path.splitext(row['file_name'])[0] + '_exclusion.tif'
+            exclusion_output_file_path = output_path + exclusion_output_file_name
+            shutil.copy(input_file_path, exclusion_output_file_path)
 
-# Save the DataFrame to an Excel file
-df_processed.to_excel(output_excel_path, index=False)
+            # Add exclusion file info to processed files
+            processed_files.append({
+                'file_name': exclusion_output_file_name,
+                'source_resolution(m)': row['source_resolution(m)'],
+                'target_resolution(m)': row['target_resolution(m)'],
+                'source_CRS': row['source_CRS'],
+                'target_CRS': row['target_CRS'],
+                'AOI': row['AOI'],
+                'exclusion': row['exclusion']
+            })
+
+    # Create a DataFrame from the processed_files list
+    df_processed = pd.DataFrame(processed_files)
+
+    # Save the DataFrame to an Excel file
+    df_processed.to_excel(output_excel_path, index=False)
+
+if __name__ == "__main__":
+    main()

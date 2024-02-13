@@ -60,14 +60,18 @@ def process_files(df_input_excel, input_data_path, output_path):
 
     return processed_files
 
-input_path = r'data\\step1\\'
-output_path = r'data\\step3\\'
-setting_excel_path = r'data\\setting_excel\\'
-input_excel_path = setting_excel_path + r'step2_excel_template.xlsx'
-output_excel_path = setting_excel_path + r'step3_excel_template.xlsx'
+def main():
+    input_path = r'data\\step1\\'
+    output_path = r'data\\step3\\'
+    setting_excel_path = r'data\\setting_excel\\'
+    input_excel_path = setting_excel_path + r'step2_excel_template.xlsx'
+    output_excel_path = setting_excel_path + r'step3_excel_template.xlsx'
 
-df_input_excel = pd.read_excel(input_excel_path)
+    df_input_excel = pd.read_excel(input_excel_path)
 
-processed_files = process_files(df_input_excel, input_path, output_path)
-df_processed = pd.DataFrame(processed_files)
-df_processed.to_excel(output_excel_path, index=False)
+    processed_files = process_files(df_input_excel, input_path, output_path)
+    df_processed = pd.DataFrame(processed_files)
+    df_processed.to_excel(output_excel_path, index=False)
+
+if __name__ == "__main__":
+    main()

@@ -36,15 +36,18 @@ def get_file_list(directory, file_extensions):
 
     return file_list
 
+def main():
+    input_path = r'data\\step1\\'
+    output_path = r'data\\step2\\'
+    setting_excel_path = r'data\\setting_excel\\'
+    output_excel_path = setting_excel_path + r'step2_excel_template.xlsx'
+    extensions = ['.tif', '.shp', '.geojson']
 
-input_path = r'data\\step1\\'
-output_path = r'data\\step2\\'
-setting_excel_path = r'data\\setting_excel\\'
-output_excel_path = setting_excel_path + r'step2_excel_template.xlsx'
-extensions = ['.tif', '.shp', '.geojson']
+    file_data = get_file_list(input_path, extensions)
+    df = pd.DataFrame(file_data)
 
-file_data = get_file_list(input_path, extensions)
-df = pd.DataFrame(file_data)
+    # Save to Excel
+    df.to_excel(output_excel_path, index=False)
 
-# Save to Excel
-df.to_excel(output_excel_path, index=False)
+if __name__ == "__main__":
+    main()
