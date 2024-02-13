@@ -20,6 +20,7 @@ def parse_range(layer_name, row_data, raster_data):
     raster_max_val = np.max(raster_data)
 
     # Initialize dictionaries
+    exclusive_info = {}
     most_suitable_info = {}
     suitable_info = {}
     least_suitable_info = {}
@@ -32,7 +33,9 @@ def parse_range(layer_name, row_data, raster_data):
     else:
         # Function to process range strings
         def process_range_str(range_str):
-            if range_str:
+            if not range_str or pd.isna(range_str):
+                return {}
+            elif range_str:
                 # Find all numbers in the string
                 numbers = re.findall(r'-?\d+', range_str)
                 numbers = [int(num) for num in numbers]
@@ -45,15 +48,14 @@ def parse_range(layer_name, row_data, raster_data):
                         return {'min': numbers[0], 'max': numbers[1]}
                 else:
                     return {'values': numbers}
-            else:
-                return {}
 
         # Apply processing to each range
+        exclusive_info = process_range_str(row_data['exclusive_range'])
         most_suitable_info = process_range_str(row_data['most_suitable'])
         suitable_info = process_range_str(row_data['suitable'])
         least_suitable_info = process_range_str(row_data['least_suitable'])
 
-    return {1: most_suitable_info, 2: suitable_info, 3: least_suitable_info}
+    return {0: exclusive_info, 1: most_suitable_info, 2: suitable_info, 3: least_suitable_info}
 
 
 def reclassify_by_range(layer_name, raster, raster_data, raster_output_path, ranges):
@@ -61,27 +63,40 @@ def reclassify_by_range(layer_name, raster, raster_data, raster_output_path, ran
     reclassified_data = np.zeros_like(raster_data)
     
     for score, value_range in ranges.items():
-        # land cover
-        if 'land_cover' in layer_name: 
-            for val in value_range['values']:
-                condition = (raster_data == val)
-                reclassified_data[condition] = score
-        # min-max ranges
+        # exclusion 처리
+        if score == 0 and value_range != {}:
+            min_val_raw = value_range.get('min', None)
+            max_val_raw = value_range.get('max', None)
+            
+            # min_val과 max_val이 None이 아닐 경우에만 int로 변환
+            min_val = int(min_val_raw) if min_val_raw is not None else None
+            max_val = int(max_val_raw) if max_val_raw is not None else None
+            
+            # 조건이 유효한 경우에만 condition 계산 및 적용
+            if min_val is not None and max_val is not None:
+                condition = (raster_data >= min_val) & (raster_data <= max_val)
+                reclassified_data[condition] = 1
         else:
-            # None 값 처리를 위한 조건 추가
-            min_val = int(value_range.get('min', None))
-            if min_val is None:
-                min_val = np.min(raster_data)  # 최소값 설정
-            max_val = int(value_range.get('max', None))
-            if max_val is None:
-                max_val = np.max(raster_data)  # 최대값 설정
-
-            condition = (raster_data >= min_val) & (raster_data <= max_val)
-            reclassified_data[condition] = score
+            # land cover
+            if 'land_cover' in layer_name and 'values' in value_range: 
+                for val in value_range['values']:
+                    condition = (raster_data == val)
+                    reclassified_data[condition] = score
+            # min-max ranges
+            elif value_range != {}:
+                min_val_raw = value_range.get('min', None)
+                max_val_raw = value_range.get('max', None)
+                
+                min_val = int(min_val_raw) if min_val_raw is not None else None
+                max_val = int(max_val_raw) if max_val_raw is not None else None
+                
+                if min_val is not None and max_val is not None:
+                    condition = (raster_data >= min_val) & (raster_data <= max_val)
+                    reclassified_data[condition] = score
 
     # 새로운 래스터 파일을 저장하는 나머지 부분은 변경 없음
     driver = gdal.GetDriverByName('GTiff')
-    new_raster = driver.Create(raster_output_path, raster.RasterXSize, raster.RasterYSize, 1, band.DataType)
+    new_raster = driver.Create(raster_output_path, raster.RasterXSize, raster.RasterYSize, 1, gdal.GDT_Float32)
     new_band = new_raster.GetRasterBand(1)
     new_band.WriteArray(reclassified_data)
     new_raster.SetProjection(raster.GetProjection())
@@ -89,6 +104,7 @@ def reclassify_by_range(layer_name, raster, raster_data, raster_output_path, ran
     new_band.FlushCache()
     raster = None
     new_raster = None
+
 
 
 input_path = r'data\\step6\\'
@@ -164,8 +180,35 @@ for idx, row in tif_df.iterrows():
 
         # Create new file with "_exclusion" to Exclusive_range + add 1 to exclusion column
         if pd.notnull(row['exclusive_range']):
-            print('exclusion')
+            base_file_name = os.path.splitext(row['file_name'])[0]
+            output_file_name = base_file_name + '_exclusion.tif'
+            output_file_path = output_path + output_file_name
 
+            raster = gdal.Open(input_file_path)
+            band = raster.GetRasterBand(1)
+            raster_data = band.ReadAsArray()
+
+            # Updated to pass raster_data directly
+            range_dict = parse_range(base_file_name, row, raster_data)
+
+            # reclassify_by_range updated to remove the unnecessary 'raster' parameter
+            reclassify_by_range(base_file_name, raster, raster_data, output_file_path, range_dict)
+
+            # Add file info to excel
+            processed_files.append({
+                'file_name': output_file_name,
+                'source_resolution(m)': row['source_resolution(m)'],
+                'target_resolution(m)': row['target_resolution(m)'],
+                'source_CRS': row['source_CRS'],
+                'target_CRS': row['target_CRS'],
+                'AOI': row['AOI'],
+                'exclusion': row['exclusion'],
+                'most_suitable': row['most_suitable'],
+                'suitable': row['suitable'],
+                'least_suitable': row['least_suitable'],
+                'exclusive_range': row['exclusive_range'],
+                'layer_weight': row['layer_weight']
+            })
 
 
 # Create a DataFrame from the processed_files list
