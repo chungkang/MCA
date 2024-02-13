@@ -10,66 +10,74 @@ import pandas as pd
 from osgeo import gdal
 import shutil  # library for copying files
 import numpy as np
+import re
 
 
 # 이 함수는 범위 문자열을 입력으로 받고 범위 유형과 실제 값을 딕셔너리로 반환합니다.
-def parse_range(range_str, raster_data):
-    range_str = str(range_str).strip()
-
-    # 최소값과 최대값을 래스터 데이터에서 추출
+def parse_range(layer_name, row_data, raster_data):
+    # extract minimum/maximum values from raster data
     raster_min_val = np.min(raster_data)
     raster_max_val = np.max(raster_data)
 
-    if '-' in range_str:
-        parts = range_str.split('-')
-        # 최소값만 있는 경우 (예: "-5")
-        if range_str.startswith('-'):
-            min_val = None  # 최소값을 래스터의 최소값으로 설정
-            max_val = int(parts[1]) if parts[1] else raster_max_val
-        # 최대값만 있는 경우 (예: "5-")
-        elif range_str.endswith('-'):
-            min_val = int(parts[0]) if parts[0] else raster_min_val
-            max_val = None  # 최대값을 래스터의 최대값으로 설정
-        # 최소-최대 범위
-        else:
-            min_val = int(parts[0]) if parts[0] else raster_min_val
-            max_val = int(parts[1]) if parts[1] else raster_max_val
+    # Initialize dictionaries
+    most_suitable_info = {}
+    suitable_info = {}
+    least_suitable_info = {}
 
-        # 범위 유형 결정
-        if min_val is None:
-            return {'type': 1, 'min': raster_min_val, 'max': max_val}
-        elif max_val is None:
-            return {'type': 3, 'min': min_val, 'max': raster_max_val}
-        else:
-            return {'type': 3, 'min': min_val, 'max': max_val}
-    elif ',' in range_str:
-        values = list(map(int, range_str.split(',')))
-        return {'type': 2, 'values': values}
-    elif range_str.isdigit():
-        return {'type': 2, 'values': [int(range_str)]}
+    if 'land_cover' in layer_name:
+        # Handle land cover separately
+        most_suitable_info['values'] = list(map(int, row_data['most_suitable'].split(','))) if row_data['most_suitable'] else []
+        suitable_info['values'] = list(map(int, row_data['suitable'].split(','))) if row_data['suitable'] else []
+        least_suitable_info['values'] = list(map(int, row_data['least_suitable'].split(','))) if row_data['least_suitable'] else []
+    else:
+        # Function to process range strings
+        def process_range_str(range_str):
+            if range_str:
+                # Find all numbers in the string
+                numbers = re.findall(r'-?\d+', range_str)
+                numbers = [int(num) for num in numbers]
+                if "~" in range_str:
+                    if range_str.startswith("~"):
+                        return {'min': raster_min_val, 'max': numbers[0]}
+                    elif range_str.endswith("~"):
+                        return {'min': numbers[0], 'max': raster_max_val}
+                    else:
+                        return {'min': numbers[0], 'max': numbers[1]}
+                else:
+                    return {'values': numbers}
+            else:
+                return {}
+
+        # Apply processing to each range
+        most_suitable_info = process_range_str(row_data['most_suitable'])
+        suitable_info = process_range_str(row_data['suitable'])
+        least_suitable_info = process_range_str(row_data['least_suitable'])
+
+    return {1: most_suitable_info, 2: suitable_info, 3: least_suitable_info}
 
 
-
-def reclassify_by_range(raster, raster_data, raster_output_path, ranges):
-    # 새로운 래스터 데이터를 저장할 배열을 생성합니다.
+def reclassify_by_range(layer_name, raster, raster_data, raster_output_path, ranges):
+    # create new raster to save reclassed data
     reclassified_data = np.zeros_like(raster_data)
     
     for score, value_range in ranges.items():
-        if value_range['type'] == 1:  # 최소-최대 범위
+        # land cover
+        if 'land_cover' in layer_name: 
+            for val in value_range['values']:
+                condition = (raster_data == val)
+                reclassified_data[condition] = score
+        # min-max ranges
+        else:
             # None 값 처리를 위한 조건 추가
-            min_val = value_range.get('min', None)
+            min_val = int(value_range.get('min', None))
             if min_val is None:
                 min_val = np.min(raster_data)  # 최소값 설정
-            max_val = value_range.get('max', None)
+            max_val = int(value_range.get('max', None))
             if max_val is None:
                 max_val = np.max(raster_data)  # 최대값 설정
 
             condition = (raster_data >= min_val) & (raster_data <= max_val)
             reclassified_data[condition] = score
-        elif value_range['type'] == 2:  # 특정 값들의 리스트
-            for val in value_range['values']:
-                condition = (raster_data == val)
-                reclassified_data[condition] = score
 
     # 새로운 래스터 파일을 저장하는 나머지 부분은 변경 없음
     driver = gdal.GetDriverByName('GTiff')
@@ -124,29 +132,20 @@ for idx, row in tif_df.iterrows():
     # calculate layers with range values
     else:
         if pd.notnull(row['most_suitable']):
-            base_file_name = os.path.splitext(row['file_name'])[0]  # .tif 확장자 제거
-            output_file_name = base_file_name + '_scored.tif'  # 최종 파일 이름 설정
-            output_file_path = output_path + output_file_name  # 출력 파일 경로 설정
+            base_file_name = os.path.splitext(row['file_name'])[0]
+            output_file_name = base_file_name + '_scored.tif'
+            output_file_path = output_path + output_file_name
 
             raster = gdal.Open(input_file_path)
             band = raster.GetRasterBand(1)
             raster_data = band.ReadAsArray()
 
-            # 범위 문자열을 파싱하여 범위 유형과 값을 추출합니다.
-            most_suitable_info = parse_range(row['most_suitable'], raster_data)
-            suitable_info = parse_range(row['suitable'], raster_data)
-            least_suitable_info = parse_range(row['least_suitable'], raster_data)
+            # Updated to pass raster_data directly
+            range_dict = parse_range(base_file_name, row, raster_data)
 
-            # 각 점수에 해당하는 범위 정보를 사전에 저장합니다.
-            range_dict = {
-                1: most_suitable_info,
-                2: suitable_info,
-                3: least_suitable_info
-            }
+            # reclassify_by_range updated to remove the unnecessary 'raster' parameter
+            reclassify_by_range(base_file_name, raster, raster_data, output_file_path, range_dict)
 
-            # reclassify_by_range 함수를 호출하여 래스터 데이터를 재분류합니다.
-            reclassify_by_range(raster, raster_data, output_file_path, range_dict)
-            
             # Add file info to excel
             processed_files.append({
                 'file_name': output_file_name,
