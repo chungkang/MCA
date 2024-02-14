@@ -55,42 +55,29 @@ def parse_range(layer_name, row_data, raster_data):
         suitable_info = process_range_str(row_data['suitable'], raster_min, raster_max)
         least_suitable_info = process_range_str(row_data['least_suitable'], raster_min, raster_max)
 
-    return {0: exclusive_info, 1: most_suitable_info, 2: suitable_info, 3: least_suitable_info}
+    range_dictionary = {0: exclusive_info, 1: most_suitable_info, 2: suitable_info, 3: least_suitable_info}
+    # print(range_dictionary)
+    return range_dictionary
 
 
-def is_empty(value):
-    # 딕셔너리가 비어있는지, 또는 모든 값이 '빈' 값인지 확인
-    if value is None or not value:
-        return True
-    if isinstance(value, dict):
-        return all(is_empty(v) for v in value.values())
-    return False  # 다른 타입의 경우, 여기서는 기본적으로 '빈' 값이 아니라고 가정
-
-
-def reclassify_by_range(layer_name, raster, raster_data, raster_output_path, ranges):
+def reclassify_by_range(layer_name, raster, raster_data, raster_output_path, ranges, exclusive_yn):
     # create new raster to save reclassed data
     reclassified_data = np.zeros_like(raster_data)
     
-    # exclusive_info가 비어있는지 확인
-    exclusive_info_empty = is_empty(ranges.get(0))
-
     for score, value_range in ranges.items():
-        # exclusive_info가 비어있지 않고, score가 0인 경우만 처리하도록 변경
-        if score == 0:
-            if exclusive_info_empty:
-                # exclusive_info가 비어있으면 0에 대한 처리를 건너뜀
-                continue
-            else:
-                # exclusive_info 처리
-                min_val_raw = value_range.get('min', None)
-                max_val_raw = value_range.get('max', None)
+        # score가 0인, exclusive 인 경우 
+        if score == 0 and exclusive_yn == 'Y':
+            # exclusive_info 처리
+            min_val_raw = value_range.get('min', None)
+            max_val_raw = value_range.get('max', None)
 
-                min_val = int(min_val_raw) if min_val_raw is not None else None
-                max_val = int(max_val_raw) if max_val_raw is not None else None
+            min_val = int(min_val_raw) if min_val_raw is not None else None
+            max_val = int(max_val_raw) if max_val_raw is not None else None
 
-                if min_val is not None and max_val is not None:
-                    condition = (raster_data >= min_val) & (raster_data <= max_val)
-                    reclassified_data[condition] = 1
+            if min_val is not None and max_val is not None:
+                condition = (raster_data >= min_val) & (raster_data <= max_val)
+                reclassified_data[condition] = 1
+            break
         else:
             # land cover
             if 'land_cover' in layer_name and 'values' in value_range: 
@@ -109,7 +96,6 @@ def reclassify_by_range(layer_name, raster, raster_data, raster_output_path, ran
                     condition = (raster_data >= min_val) & (raster_data <= max_val)
                     reclassified_data[condition] = score
 
-    # 새로운 래스터 파일을 저장하는 나머지 부분은 변경 없음
     driver = gdal.GetDriverByName('GTiff')
     new_raster = driver.Create(raster_output_path, raster.RasterXSize, raster.RasterYSize, 1, gdal.GDT_Float32)
     new_band = new_raster.GetRasterBand(1)
@@ -132,11 +118,14 @@ def process_range_calculation(input_path, output_path, input_excel_path, output_
     for idx, row in df_input_excel.iterrows():
         input_file_path = input_path + row['file_name']
 
-        # AOI/exclusion 처리 -> 그대로 복사
+        # AOI/exclusion
         if row['AOI'] == 1 or row['exclusion'] == 1:
             output_file_name = row['file_name']
             output_file_path = output_path + output_file_name
+            
+            # no processing, just copying
             shutil.copy(input_file_path, output_file_path)
+
             # Add file info to excel
             processed_files.append({
                 'file_name': output_file_name,
@@ -153,69 +142,71 @@ def process_range_calculation(input_path, output_path, input_excel_path, output_
                 'layer_weight': row['layer_weight']
             })
 
-        # suitability 처리 -> range 별로 reclass 하여 저장
-        if pd.notnull(row['most_suitable']):
-            base_file_name = os.path.splitext(row['file_name'])[0]
-            output_file_name = base_file_name + '_scored.tif'
-            output_file_path = output_path + output_file_name
+        # none AOI/exclusion
+        else:
+            # calculate range of suitability
+            if pd.notnull(row['most_suitable']):
+                base_file_name = os.path.splitext(row['file_name'])[0]
+                output_file_name = base_file_name + '_scored.tif'
+                output_file_path = output_path + output_file_name
 
-            suitability_raster = gdal.Open(input_file_path)
-            band = suitability_raster.GetRasterBand(1)
-            raster_data = band.ReadAsArray()
+                suitability_raster = gdal.Open(input_file_path)
+                band = suitability_raster.GetRasterBand(1)
+                raster_data = band.ReadAsArray()
 
-            # Updated to pass raster_data directly
-            range_dict = parse_range(base_file_name, row, raster_data)
+                # Updated to pass raster_data directly
+                range_dict = parse_range(base_file_name, row, raster_data)
 
-            # reclassify_by_range updated to remove the unnecessary 'raster' parameter
-            reclassify_by_range(base_file_name, suitability_raster, raster_data, output_file_path, range_dict)
+                # reclassify_by_range updated to remove the unnecessary 'raster' parameter
+                reclassify_by_range(base_file_name, suitability_raster, raster_data, output_file_path, range_dict, 'N')
 
-            # Add file info to excel
-            processed_files.append({
-                'file_name': output_file_name,
-                'source_resolution(m)': row['source_resolution(m)'],
-                'target_resolution(m)': row['target_resolution(m)'],
-                'source_CRS': row['source_CRS'],
-                'target_CRS': row['target_CRS'],
-                'AOI': row['AOI'],
-                'exclusion': row['exclusion'],
-                'most_suitable': row['most_suitable'],
-                'suitable': row['suitable'],
-                'least_suitable': row['least_suitable'],
-                'exclusive_range': None,
-                'layer_weight': row['layer_weight']
-            })
+                # Add file info to excel
+                processed_files.append({
+                    'file_name': output_file_name,
+                    'source_resolution(m)': row['source_resolution(m)'],
+                    'target_resolution(m)': row['target_resolution(m)'],
+                    'source_CRS': row['source_CRS'],
+                    'target_CRS': row['target_CRS'],
+                    'AOI': row['AOI'],
+                    'exclusion': row['exclusion'],
+                    'most_suitable': row['most_suitable'],
+                    'suitable': row['suitable'],
+                    'least_suitable': row['least_suitable'],
+                    'exclusive_range': None,
+                    'layer_weight': row['layer_weight']
+                })
 
-        # exclusive 처리 -> Create new file with "_exclusion" to Exclusive_range + add 1 to exclusion column
-        if pd.notnull(row['exclusive_range']):
-            base_file_name = os.path.splitext(row['file_name'])[0]
-            output_file_name = base_file_name + '_exclusion.tif'
-            output_file_path = output_path + output_file_name
+            # calculate exclusive range -> Create new file with "_exclusion" to Exclusive_range + add 1 to exclusion column
+            if pd.notnull(row['exclusive_range']):
+                base_file_name = os.path.splitext(row['file_name'])[0]
+                output_file_name = base_file_name + '_exclusion.tif'
+                output_file_path = output_path + output_file_name
 
-            raster = gdal.Open(input_file_path)
-            band = raster.GetRasterBand(1)
-            raster_data = band.ReadAsArray()
+                raster = gdal.Open(input_file_path)
+                band = raster.GetRasterBand(1)
+                raster_data = band.ReadAsArray()
 
-            # Updated to pass raster_data directly
-            range_dict = parse_range(base_file_name, row, raster_data)
+                # Updated to pass raster_data directly
+                range_dict = parse_range(base_file_name, row, raster_data)
 
-            # reclassify_by_range updated to remove the unnecessary 'raster' parameter
-            reclassify_by_range(base_file_name, raster, raster_data, output_file_path, range_dict)
+                # reclassify_by_range updated to remove the unnecessary 'raster' parameter
+                reclassify_by_range(base_file_name, raster, raster_data, output_file_path, range_dict, 'Y')
 
-            # Add file info to excel
-            processed_files.append({
-                'file_name': output_file_name,
-                'source_resolution(m)': row['source_resolution(m)'],
-                'target_resolution(m)': row['target_resolution(m)'],
-                'source_CRS': row['source_CRS'],
-                'target_CRS': row['target_CRS'],
-                'AOI': row['AOI'],
-                'exclusion': 1,
-                'most_suitable': None,
-                'suitable': None,
-                'least_suitable': None,
-                'exclusive_range': row['exclusive_range'],
-                'layer_weight': None
-            })
+                # Add file info to excel
+                processed_files.append({
+                    'file_name': output_file_name,
+                    'source_resolution(m)': row['source_resolution(m)'],
+                    'target_resolution(m)': row['target_resolution(m)'],
+                    'source_CRS': row['source_CRS'],
+                    'target_CRS': row['target_CRS'],
+                    'AOI': row['AOI'],
+                    'exclusion': 1,
+                    'most_suitable': None,
+                    'suitable': None,
+                    'least_suitable': None,
+                    'exclusive_range': row['exclusive_range'],
+                    'layer_weight': None
+                })
 
     # Create a DataFrame from the processed_files list
     df_processed = pd.DataFrame(processed_files)
