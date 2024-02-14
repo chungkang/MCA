@@ -11,7 +11,8 @@ from osgeo import gdal
 import shutil  # library for copying files
 import numpy as np
 import re
-
+import rasterio
+import copy
 
 # Function to process range strings
 def process_range_str(range_str, raster_min_val, raster_max_val):
@@ -119,7 +120,7 @@ def process_range_calculation(input_path, output_path, input_excel_path, output_
         input_file_path = input_path + row['file_name']
 
         # AOI/exclusion
-        if row['AOI'] == 1 or row['exclusion'] == 1:
+        if 'AOI' in row['file_name'] or 'exclusion' in row['file_name']:
             output_file_name = row['file_name']
             output_file_path = output_path + output_file_name
             
@@ -141,6 +142,12 @@ def process_range_calculation(input_path, output_path, input_excel_path, output_
                 'exclusive_range': row['exclusive_range'],
                 'layer_weight': row['layer_weight']
             })
+
+            # AOI 파일을 사용해서 base frame을 생성
+            if 'AOI' in row['file_name']:
+                # create base raster array for raster calculation, should be 0 value
+                with rasterio.open(input_file_path) as AOI_dataset:
+                    array_calculation = np.zeros_like(AOI_dataset.read(1).astype(float))
 
         # none AOI/exclusion
         else:
@@ -167,8 +174,8 @@ def process_range_calculation(input_path, output_path, input_excel_path, output_
                     'target_resolution(m)': row['target_resolution(m)'],
                     'source_CRS': row['source_CRS'],
                     'target_CRS': row['target_CRS'],
-                    'AOI': row['AOI'],
-                    'exclusion': row['exclusion'],
+                    'AOI': None,
+                    'exclusion': None,
                     'most_suitable': row['most_suitable'],
                     'suitable': row['suitable'],
                     'least_suitable': row['least_suitable'],
@@ -199,7 +206,7 @@ def process_range_calculation(input_path, output_path, input_excel_path, output_
                     'target_resolution(m)': row['target_resolution(m)'],
                     'source_CRS': row['source_CRS'],
                     'target_CRS': row['target_CRS'],
-                    'AOI': row['AOI'],
+                    'AOI': None,
                     'exclusion': 1,
                     'most_suitable': None,
                     'suitable': None,
@@ -207,6 +214,102 @@ def process_range_calculation(input_path, output_path, input_excel_path, output_
                     'exclusive_range': row['exclusive_range'],
                     'layer_weight': None
                 })
+            
+
+            # add AOI filter for Floating Photovoltaic(FPV)/Ground-mounted Solar Photovoltaic(PV)
+            if 'GLOBathy' in row['file_name']:
+                # FPV
+                if row['AOI'] == 1:
+                    # GLOBathy 파일 열기
+                    with rasterio.open(input_path + row['file_name']) as globathy_dataset:
+                        # GLOBathy 데이터 읽기
+                        globathy_data = globathy_dataset.read(1).astype(float)
+                        
+                        # 'no data' 값이 아닌 모든 셀에 1 할당
+                        # 여기서는 예를 들어 'no data' 값을 0으로 가정합니다.
+                        # 실제 'no data' 값은 래스터 데이터의 메타데이터를 확인하여 적용해야 합니다.
+                        mask = globathy_data != 0  # 0이 아닌 모든 값에 대한 마스크 생성
+                        array_calculation[mask] = 1  # 마스크된 위치에 1을 할당
+
+                        base_file_name = os.path.splitext(row['file_name'])[0]
+                        output_file_name = base_file_name + '_FPV.tif'
+                        output_file_path = output_path + output_file_name
+
+                        # 변환된 래스터 데이터를 파일로 저장하는 로직
+                        new_dataset = rasterio.open(
+                            output_file_path, 'w',
+                            driver='GTiff',
+                            height=array_calculation.shape[0],
+                            width=array_calculation.shape[1],
+                            count=1,
+                            dtype=array_calculation.dtype,
+                            crs=AOI_dataset.crs,
+                            transform=AOI_dataset.transform,
+                        )
+                        new_dataset.write(array_calculation, 1)
+                        new_dataset.close()
+
+                        # GLOBathy 처리된 파일 정보를 processed_files 리스트에 추가
+                        processed_files.append({
+                            'file_name': output_file_name,
+                            'source_resolution(m)': row['source_resolution(m)'],
+                            'target_resolution(m)': row['target_resolution(m)'],
+                            'source_CRS': row['source_CRS'],
+                            'target_CRS': row['target_CRS'],
+                            'AOI': 1,
+                            'exclusion': None,
+                            'most_suitable': None,
+                            'suitable': None,
+                            'least_suitable': None,
+                            'exclusive_range': None,
+                            'layer_weight': None
+                        })
+                # PV
+                else:
+                    # PV 파일 열기
+                    with rasterio.open(input_path + row['file_name']) as pv_dataset:
+                        # PV 데이터 읽기
+                        pv_data = pv_dataset.read(1).astype(float)
+                        
+                        # 'no data' 또는 0의 값을 가진 모든 셀에 1 할당
+                        # 여기서도 'no data' 값을 0으로 가정합니다.
+                        # 실제 'no data' 값은 래스터 데이터의 메타데이터를 확인하여 적용해야 합니다.
+                        mask = (pv_data == 0)  # 0 값을 가진 셀에 대한 마스크 생성
+                        array_calculation[mask] = 1  # 마스크된 위치에 1을 할당
+
+                        base_file_name = os.path.splitext(row['file_name'])[0]
+                        output_file_name = base_file_name + '_PV.tif'
+                        output_file_path = output_path + output_file_name
+
+                        # 변환된 래스터 데이터를 파일로 저장하는 로직
+                        new_dataset = rasterio.open(
+                            output_file_path, 'w',
+                            driver='GTiff',
+                            height=array_calculation.shape[0],
+                            width=array_calculation.shape[1],
+                            count=1,
+                            dtype=array_calculation.dtype,
+                            crs=AOI_dataset.crs,
+                            transform=AOI_dataset.transform,
+                        )
+                        new_dataset.write(array_calculation, 1)
+                        new_dataset.close()
+
+                        # GLOBathy 처리된 파일 정보를 processed_files 리스트에 추가
+                        processed_files.append({
+                            'file_name': output_file_name,
+                            'source_resolution(m)': row['source_resolution(m)'],
+                            'target_resolution(m)': row['target_resolution(m)'],
+                            'source_CRS': row['source_CRS'],
+                            'target_CRS': row['target_CRS'],
+                            'AOI': 1,
+                            'exclusion': None,
+                            'most_suitable': None,
+                            'suitable': None,
+                            'least_suitable': None,
+                            'exclusive_range': None,
+                            'layer_weight': None
+                        })
 
     # Create a DataFrame from the processed_files list
     df_processed = pd.DataFrame(processed_files)

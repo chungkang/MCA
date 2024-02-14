@@ -20,6 +20,7 @@ def process_result_calculation(input_path, output_path, input_excel_path, output
     # Calculate 'layer_weight_rate' column
     df_input_excel['layer_weight_rate'] = (df_input_excel['layer_weight'] / scored_df['layer_weight'].sum()).round(3)
 
+    # file_name에 "AOI" 가 포함된 것으로 수정
     # AOI data frame
     df_AOI = df_input_excel[df_input_excel['AOI'] == 1]
     AOI_file_path = input_path + df_AOI.iloc[0]['file_name']
