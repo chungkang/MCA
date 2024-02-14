@@ -128,10 +128,8 @@ def process_range_calculation(input_path, output_path, input_excel_path, output_
     # Initialize a list to keep track of processed files for the Excel output
     processed_files = []
 
-    tif_df = df_input_excel[df_input_excel['file_name'].str.lower().str.endswith('.tif')]
-
     # Process '.tif' files for range calculation
-    for idx, row in tif_df.iterrows():
+    for idx, row in df_input_excel.iterrows():
         input_file_path = input_path + row['file_name']
 
         # AOI/exclusion 처리 -> 그대로 복사
@@ -183,7 +181,7 @@ def process_range_calculation(input_path, output_path, input_excel_path, output_
                 'most_suitable': row['most_suitable'],
                 'suitable': row['suitable'],
                 'least_suitable': row['least_suitable'],
-                'exclusive_range': row['exclusive_range'],
+                'exclusive_range': None,
                 'layer_weight': row['layer_weight']
             })
 
@@ -211,12 +209,12 @@ def process_range_calculation(input_path, output_path, input_excel_path, output_
                 'source_CRS': row['source_CRS'],
                 'target_CRS': row['target_CRS'],
                 'AOI': row['AOI'],
-                'exclusion': row['exclusion'],
-                'most_suitable': row['most_suitable'],
-                'suitable': row['suitable'],
-                'least_suitable': row['least_suitable'],
+                'exclusion': 1,
+                'most_suitable': None,
+                'suitable': None,
+                'least_suitable': None,
                 'exclusive_range': row['exclusive_range'],
-                'layer_weight': row['layer_weight']
+                'layer_weight': None
             })
 
     # Create a DataFrame from the processed_files list
