@@ -35,7 +35,19 @@ def convert_crs(input_file_path, output_file_path, source_crs, target_crs, is_ra
         gdf = gpd.read_file(input_file_path)
         if source_crs != target_crs:
             gdf = gdf.to_crs(target_crs)
-        gdf.to_file(output_file_path, driver='ESRI Shapefile')
+
+        # AOI/protected area
+        if 'AOI' in input_file_path or 'protected' in input_file_path:
+            gdf_filtered = gdf[gdf['geometry'].type.isin(['Polygon', 'MultiPolygon'])]
+        
+        # roads, electrical grids..
+        else:
+            gdf_filtered = gdf[gdf['geometry'].type.isin(['LineString', 'MultiLineString'])]
+
+        if not gdf_filtered.empty:
+            gdf_filtered.to_file(output_file_path, driver='ESRI Shapefile')
+        else:
+            print(f"No matching geometries found in the file: {input_file_path}")
 
 def process_files(df_input_excel, input_data_path, output_path):
     processed_files = []
