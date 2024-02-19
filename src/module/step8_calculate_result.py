@@ -10,12 +10,12 @@ import rasterio
 import numpy as np
 import copy
 
-def process_result_calculation(input_path, output_path, input_excel_path, output_excel_path):
+def process_result_calculation(input_path, output_path, input_excel_path):
     # create panda data frame for each purpose
     df_input_excel = pd.read_excel(input_excel_path)
 
     # Filter rows where are AOI, exclusion
-    scored_df = df_input_excel[(df_input_excel['AOI'] == 1) | (df_input_excel['exclusion'] != 1)]
+    scored_df = df_input_excel[(df_input_excel['AOI'] != 1) | (df_input_excel['exclusion'] != 1)]
 
     # Calculate 'layer_weight_rate' column
     df_input_excel['layer_weight_rate'] = (df_input_excel['layer_weight'] / scored_df['layer_weight'].sum()).round(3)
@@ -80,8 +80,7 @@ def main():
     output_path = r'data\\step8\\'
     setting_excel_path = r'data\\setting_excel\\'
     input_excel_path = setting_excel_path + r'step7_excel_template.xlsx'
-    output_excel_path = setting_excel_path + r'step8_excel_template.xlsx'
-    process_result_calculation(input_path, output_path, input_excel_path, output_excel_path)
+    process_result_calculation(input_path, output_path, input_excel_path)
 
 if __name__ == "__main__":
     main()

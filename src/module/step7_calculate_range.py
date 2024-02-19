@@ -130,10 +130,6 @@ def process_range_calculation(input_path, output_path, input_excel_path, output_
             # Add file info to excel
             processed_files.append({
                 'file_name': output_file_name,
-                'source_resolution(m)': row['source_resolution(m)'],
-                'target_resolution(m)': row['target_resolution(m)'],
-                'source_CRS': row['source_CRS'],
-                'target_CRS': row['target_CRS'],
                 'AOI': row['AOI'],
                 'exclusion': row['exclusion'],
                 'most_suitable': row['most_suitable'],
@@ -170,10 +166,6 @@ def process_range_calculation(input_path, output_path, input_excel_path, output_
                 # Add file info to excel
                 processed_files.append({
                     'file_name': output_file_name,
-                    'source_resolution(m)': row['source_resolution(m)'],
-                    'target_resolution(m)': row['target_resolution(m)'],
-                    'source_CRS': row['source_CRS'],
-                    'target_CRS': row['target_CRS'],
                     'AOI': None,
                     'exclusion': None,
                     'most_suitable': row['most_suitable'],
@@ -202,10 +194,6 @@ def process_range_calculation(input_path, output_path, input_excel_path, output_
                 # Add file info to excel
                 processed_files.append({
                     'file_name': output_file_name,
-                    'source_resolution(m)': row['source_resolution(m)'],
-                    'target_resolution(m)': row['target_resolution(m)'],
-                    'source_CRS': row['source_CRS'],
-                    'target_CRS': row['target_CRS'],
                     'AOI': None,
                     'exclusion': 1,
                     'most_suitable': None,
@@ -252,10 +240,6 @@ def process_range_calculation(input_path, output_path, input_excel_path, output_
                         # GLOBathy 처리된 파일 정보를 processed_files 리스트에 추가
                         processed_files.append({
                             'file_name': output_file_name,
-                            'source_resolution(m)': row['source_resolution(m)'],
-                            'target_resolution(m)': row['target_resolution(m)'],
-                            'source_CRS': row['source_CRS'],
-                            'target_CRS': row['target_CRS'],
                             'AOI': 1,
                             'exclusion': None,
                             'most_suitable': None,
@@ -298,10 +282,6 @@ def process_range_calculation(input_path, output_path, input_excel_path, output_
                         # GLOBathy 처리된 파일 정보를 processed_files 리스트에 추가
                         processed_files.append({
                             'file_name': output_file_name,
-                            'source_resolution(m)': row['source_resolution(m)'],
-                            'target_resolution(m)': row['target_resolution(m)'],
-                            'source_CRS': row['source_CRS'],
-                            'target_CRS': row['target_CRS'],
                             'AOI': 1,
                             'exclusion': None,
                             'most_suitable': None,
