@@ -7,3 +7,4 @@ https://colab.research.google.com/drive/1uMmtVNNbjE_4-qoH3WjihAMtjb1P1fSv?usp=sh
 
 ![flowchart](flowchart.png)
 
+![setting_values](setting_values.png)
