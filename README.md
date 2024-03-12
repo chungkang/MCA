@@ -1,3 +1,19 @@
+
+# Prerequisites
+- Install Git
+- Install Python
+- Install Anaconda
+- Install IDE(Integrated Development Environment) such as Visual Studio Code
+
+# How to Excute the code
+- Download or clone the repository
+- Execute the comand on Command Line or Powershall.
+`conda env create -f environment.yml`
+- Activate Virtual Environment for dependencies
+`conda activate gis`
+- Excute code
+
+
 # Multi Criteria Analysis
 The workflow is based on [QGIS Tutorials and Tips - Multi Criteria Overlay Analysis (QGIS3)](https://www.qgistutorials.com/en/docs/3/multi_criteria_overlay.html)
 
