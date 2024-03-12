@@ -22,3 +22,5 @@ Download data with Google Earth Engine Script with the [Sample Code](https://col
 ![flowchart](flowchart.png)
 
 ![setting_values](setting_values.png)
+
+* figures can be edditted with [draw.io](draw.io)
