@@ -7,7 +7,7 @@
 
 # How to Excute the code
 - Download or clone the repository
-- Execute the comand on Command Line or Powershall.
+- Execute the command on Command Line or Powershall.
 `conda env create -f environment.yml`
 - Activate Virtual Environment for dependencies
 `conda activate gis`
