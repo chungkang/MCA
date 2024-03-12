@@ -35,6 +35,11 @@ def process_result_calculation(input_path, output_path, input_excel_path):
     # filtering non-scored layers: layer_weight is null (AOI, exclusion)
     df_nonscored_layers = df_input_excel[df_input_excel['layer_weight_rate'].isna()]
 
+    print("scored------------------------------------------------")
+    print(df_scored_layers)
+    print("nonscored------------------------------------------------")
+    print(df_nonscored_layers)
+
     # calculate layer weight
     for index, row in df_scored_layers.iterrows():
         # Access values in each row
@@ -42,7 +47,7 @@ def process_result_calculation(input_path, output_path, input_excel_path):
 
         with rasterio.open(file_path) as dataset:
             dataset_raster_value = dataset.read(1)
-            array_calculation +=  dataset_raster_value * row['layer_weight_rate']
+            array_calculation += dataset_raster_value * row['layer_weight_rate']
 
     # calculate AOI, Exclusion
     for index, row in df_nonscored_layers.iterrows():
@@ -50,15 +55,22 @@ def process_result_calculation(input_path, output_path, input_excel_path):
         file_path = input_path + row['file_name']
         include_AOI = row['AOI']
         exclude = row['exclusion']
-    
+
         if include_AOI == 1:  # multiply
             with rasterio.open(file_path) as dataset:
                 dataset_raster_value = dataset.read(1)
                 array_calculation *= dataset_raster_value
-                
+
         elif exclude == 1:  # 0,1 inverted multiply
             with rasterio.open(file_path) as dataset:
-                inverted_dataset_raster_value = 1 - dataset.read(1)
+                dataset_raster_value = dataset.read(1) # 래스터 데이터 읽기
+                no_data_value = dataset.nodata # NoData 값 확인
+
+                # NoData인 셀을 0으로 설정
+                if no_data_value is not None:
+                    dataset_raster_value[dataset_raster_value == no_data_value] = 0
+
+                inverted_dataset_raster_value = 1 - dataset_raster_value
                 array_calculation *= inverted_dataset_raster_value
 
     # smaller than 1 means NoData
