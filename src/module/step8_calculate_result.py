@@ -1,8 +1,8 @@
 """
 Created by Chungkang Choi
-February 2024
+March 2024
 
-Description: Calculate Result
+Description: Calculate MCA Result
 """
 
 import pandas as pd
