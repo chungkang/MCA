@@ -12,7 +12,6 @@ import shutil  # library for copying files
 import numpy as np
 import re
 import rasterio
-import copy
 
 # Function to process range strings
 def process_range_str(range_str, raster_min_val, raster_max_val):
