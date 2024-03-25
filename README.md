@@ -5,6 +5,8 @@
 - Install Anaconda
 - Install IDE(Integrated Development Environment) such as Visual Studio Code
 
+
+
 # How to Excute the code
 - Download or clone the repository
 - Execute the command on Command Line or Powershell.
@@ -12,6 +14,7 @@
 - Activate Virtual Environment for dependencies
 `conda activate gis`
 - Excute code
+
 
 
 # Multi Criteria Analysis
@@ -40,8 +43,39 @@ Please follow the description below for each step of the procedure.
 
 4. Execute the code to download each data in use. The downloaded data will be displayed under the 'content' directory.
 
-5. Download the data to the 'data\step1' directory.
- 
+5. Download the data to the 'data\step1' directory of the project.
+
+
+
+## Step 2: Create Excel Template
+
+1. Execute 'step2_create_excel_template.py' with an IDE (such as Visual Studio Code).
+   - This will create 'step2_excel_template.xlsx' in the 'data\setting_excel' directory.
+
+2. Fill in the 'target_CRS', 'target_resolution(m)', and 'AOI' fields in 'step2_excel_template.xlsx' as desired.
+   - 'target_CRS' should be in the 'EPSG:XXXX' format.
+   - 'target_resolution' should be an integer number with the meter unit.
+   - 'AOI' should have a value of '1' (multiple AOIs can be specified, but the first one will be considered the base AOI).
+
+   ![image](https://github.com/chungkang/MCA/assets/36185863/3788222f-52df-4a4f-b678-7351039a3cba)
+
+
+
+## Step 3: Convert CRS
+
+1. Execute 'step3_convert_CRS.py' using an IDE (such as Visual Studio Code).
+   - This script utilizes 'step2_excel_template.xlsx' from the 'data\setting_excel' directory as input for setting values.
+     'file_name', 'source_CRS', and 'target_CRS' will be utilized for this step.
+   - Input data is sourced from 'data\step1', where files in tif, shp, and geojson formats are read.
+   - The outputs are stored in the 'data\step3' directory, with tif files retaining their original tif format, while shp or geojson files are converted to shp format using the specified target_CRS. Additionally, a suffix "_CRS" is appended to the filenames.
+   - This process generates 'step3_excel_template.xlsx' in the 'data\setting_excel' directory.
+
+2. Since the 'target_resolution' input from Step 2 is utilized, there is no need to input it again if it was already provided in Step 2.
+
+
+
+## Step 4: Rasterize Vector + Equalize Resolution
+
 
 
 
