@@ -92,7 +92,7 @@ Please follow the description below for each step of the procedure.
 
 
 
-## Step 5: Calculate Proximity
+## Step 5. Calculate Proximity
 
 1. Execute 'step5_calculate_proximity.py' using an IDE (such as Visual Studio Code).
    - This script utilizes 'step4_excel_template.xlsx' from the 'data\setting_excel' directory as input for setting values.
@@ -103,6 +103,10 @@ Please follow the description below for each step of the procedure.
 
 2. Since the 'AOI', 'exclusion', and 'proximity' inputs from Step 4 are utilized, there is no need to input them again if they were already provided in Step 4.
 
+
+## Step 6. Clip Extend
+
+1. Execute 'step6_clip_extend.py' using an IDE (such as Visual Studio Code).
 
 
 
