@@ -29,7 +29,7 @@ Please follow the description below for each step of the procedure.
 
 
 
-## Step 1: Prepare Data
+## Step 1. Prepare Data
 
 1. Create an Area of Interest (AOI) as a polygon in shapefile (.shp) format using QGIS.
 
@@ -47,7 +47,7 @@ Please follow the description below for each step of the procedure.
 
 
 
-## Step 2: Create Excel Template
+## Step 2. Create Excel Template
 
 1. Execute 'step2_create_excel_template.py' with an IDE (such as Visual Studio Code).
    - This will create 'step2_excel_template.xlsx' in the 'data\setting_excel' directory.
@@ -61,7 +61,7 @@ Please follow the description below for each step of the procedure.
 
 
 
-## Step 3: Convert CRS
+## Step 3. Convert CRS
 
 1. Execute 'step3_convert_CRS.py' using an IDE (such as Visual Studio Code).
    - This script utilizes 'step2_excel_template.xlsx' from the 'data\setting_excel' directory as input for setting values.
@@ -74,13 +74,13 @@ Please follow the description below for each step of the procedure.
 
 
 
-## Step 4: Rasterize Vector + Equalize Resolution
+## Step 4. Rasterize Vector + Equalize Resolution
 
 1. Execute 'step4_rasterize_vector_equalize_resolution.py' using an IDE (such as Visual Studio Code).
    - This script utilizes 'step3_excel_template.xlsx' from the 'data\setting_excel' directory as input for setting values.
      'file_name', 'source_resolution', and 'target_resolution' will be utilized for this step.
    - Input data is sourced from 'data\step3', where files in tif and shp formats are read.
-   - The outputs are stored in the 'data\step4' directory. Files in shp format are rasterized based on the 'target_resolution' and saved in tif format with the suffix '_rasterized'. Raster files in tif format have their resolution transformed based on the 'target_resolution' and saved as tif files with the suffix '_equalized'.
+   - The outputs are stored in the 'data\step4' directory. Files in shp format are rasterized based on the 'target_resolution' and saved in tif format with the suffix '_rasterized'. Raster files in tif format have their resolution transformed based on the 'target_resolution' and saved as tif files with the suffix '_equalized'. Additionally, if 'source_resolution' and 'target_resolution' are the same, the filenames will remain unchanged from the previous ones.
    - This process generates 'step4_excel_template.xlsx' in the 'data\setting_excel' directory.
 
 2. Fill in the 'AOI', 'exclusion', and 'proximity' fields in 'step4_excel_template.xlsx' as desired.
@@ -89,6 +89,20 @@ Please follow the description below for each step of the procedure.
    - 'proximity' should have a value of '1'. 'proximity' indicates cases where vector files (in geojson or shp format) are converted to raster and range calculation is required (e.g., roads, electrical grid...).
 
    ![image](https://github.com/chungkang/MCA/assets/36185863/57b8b6fb-b1b5-42da-ae7f-b25ddafd0570)
+
+
+
+## Step 5: Calculate Proximity
+
+1. Execute 'step5_calculate_proximity.py' using an IDE (such as Visual Studio Code).
+   - This script utilizes 'step4_excel_template.xlsx' from the 'data\setting_excel' directory as input for setting values.
+     'file_name' and 'proximity' will be utilized for this step.
+   - Input data is sourced from 'data\step4', where files in tif format are read.
+   - The outputs are stored in the 'data\step5' directory. Data with 'proximity' field filled with '1' will have proximity calculated and saved as tif files with the suffix '_proximity'. Additionally, if 'proximity' does not contain '1', the filenames will remain unchanged from the previous ones.
+   - This process generates 'step5_excel_template.xlsx' in the 'data\setting_excel' directory.
+
+2. Since the 'AOI', 'exclusion', and 'proximity' inputs from Step 4 are utilized, there is no need to input them again if they were already provided in Step 4.
+
 
 
 
