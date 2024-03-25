@@ -88,7 +88,7 @@ Please follow the description below for each step of the procedure.
    - 'exclusion' should have a value of '1'. 'exclusion' indicates areas that should be excluded.
    - 'proximity' should have a value of '1'. 'proximity' indicates cases where vector files (in geojson or shp format) are converted to raster and range calculation is required (e.g., roads, electrical grid...).
 
-   ![image](https://github.com/chungkang/MCA/assets/36185863/57b8b6fb-b1b5-42da-ae7f-b25ddafd0570)
+   ![image](https://github.com/chungkang/MCA/assets/36185863/9599f785-009f-4129-ba68-2b3ed906f501)
 
 
 
