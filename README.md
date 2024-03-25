@@ -76,6 +76,19 @@ Please follow the description below for each step of the procedure.
 
 ## Step 4: Rasterize Vector + Equalize Resolution
 
+1. Execute 'step4_rasterize_vector_equalize_resolution.py' using an IDE (such as Visual Studio Code).
+   - This script utilizes 'step3_excel_template.xlsx' from the 'data\setting_excel' directory as input for setting values.
+     'file_name', 'source_resolution', and 'target_resolution' will be utilized for this step.
+   - Input data is sourced from 'data\step3', where files in tif and shp formats are read.
+   - The outputs are stored in the 'data\step4' directory. Files in shp format are rasterized based on the 'target_resolution' and saved in tif format with the suffix '_rasterized'. Raster files in tif format have their resolution transformed based on the 'target_resolution' and saved as tif files with the suffix '_equalized'.
+   - This process generates 'step4_excel_template.xlsx' in the 'data\setting_excel' directory.
+
+2. Fill in the 'AOI', 'exclusion', and 'proximity' fields in 'step4_excel_template.xlsx' as desired.
+   - 'AOI' should have a value of '1' (multiple AOIs can be specified, but the first one will be considered the base AOI).
+   - 'exclusion' should have a value of '1'. 'exclusion' indicates areas that should be excluded.
+   - 'proximity' should have a value of '1'. 'proximity' indicates cases where vector files (in geojson or shp format) are converted to raster and range calculation is required (e.g., roads, electrical grid...).
+
+   ![image](https://github.com/chungkang/MCA/assets/36185863/57b8b6fb-b1b5-42da-ae7f-b25ddafd0570)
 
 
 
