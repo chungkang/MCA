@@ -26,4 +26,4 @@ Download data with Google Earth Engine Script with the [Sample Code](https://col
 
 ![setting_values](setting_values.png)
 
-* figures can be edditted with [draw.io](draw.io)
+* figures can be editted with [draw.io](draw.io)
