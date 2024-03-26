@@ -39,7 +39,7 @@ The code for steps 3 through 8 is executed based on the Excel files of the previ
 
 3. Upload the shapefile of the AOI to the 'content' directory.
 
-   ![image](https://github.com/chungkang/MCA/assets/36185863/85ebcb9d-310b-4d69-a04b-571b9afe025f)
+   ![image](figure/sample_code_colab.png)
 
 4. Execute the code to download each data in use. The downloaded data will be displayed under the 'content' directory.
 
@@ -57,7 +57,7 @@ The code for steps 3 through 8 is executed based on the Excel files of the previ
    - 'target_resolution' should be an integer number with the meter unit.
    - 'AOI' should have a value of '1' (multiple AOIs can be specified, but the first one will be considered the base AOI).
 
-   ![image](https://github.com/chungkang/MCA/assets/36185863/3788222f-52df-4a4f-b678-7351039a3cba)
+   ![image](figure/step2_excel.png)
 
 
 
@@ -90,7 +90,7 @@ The code for steps 3 through 8 is executed based on the Excel files of the previ
    - 'exclusion' should have a value of '1'. 'exclusion' indicates areas that should be excluded.
    - 'proximity' should have a value of '1'. 'proximity' indicates cases where vector files (in geojson or shp format) are converted to raster and range calculation is required (e.g., roads, electrical grid...).
 
-   ![image](https://github.com/chungkang/MCA/assets/36185863/9599f785-009f-4129-ba68-2b3ed906f501)
+   ![image](figure/step4_excel.png)
 
 
 
@@ -157,9 +157,9 @@ The code for steps 3 through 8 is executed based on the Excel files of the previ
    - This process creates the result files in the 'data\step8' directory.
    - The resulting layers are raster (tif) files with values ranging from 1 to 3, where values closer to 1 are considered more suitable.
 
-![flowchart](flowchart.png)
+![flowchart](figure/flowchart.png)
 
-![setting_values](setting_values.png)
+![setting_values](figure/setting_values.png)
 
 * figures can be editted with [draw.io](draw.io)
 
