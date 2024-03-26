@@ -20,7 +20,7 @@ def process_result_calculation(input_path, output_path, input_excel_path):
     # Calculate 'layer_weight_rate' column
     df_input_excel['layer_weight_rate'] = (df_input_excel['layer_weight'] / scored_df['layer_weight'].sum()).round(3)
 
-    # file_name에 "AOI" 가 포함된 것으로 수정
+    # Modifying file_name to include "AOI"
     # AOI data frame
     df_AOI = df_input_excel[df_input_excel['AOI'] == 1]
     AOI_file_path = input_path + df_AOI.iloc[0]['file_name']
@@ -42,16 +42,16 @@ def process_result_calculation(input_path, output_path, input_excel_path):
         try:
             with rasterio.open(file_path) as dataset:
                 dataset_raster_value = dataset.read(1)
-                # NoData 값을 확인하고 0으로 설정
+                # Checking for NoData values and setting them to 0
                 if dataset.nodata is not None:
                     dataset_raster_value[dataset_raster_value == dataset.nodata] = 0
 
-                # 래스터 데이터 타입이 기대하는 타입인지 확인
+                # Verifying if the raster data type matches the expected type
                 if not np.issubdtype(dataset_raster_value.dtype, np.number):
                     print(f"Error: Raster data type is not numeric at path {file_path}")
                     continue
 
-                # 배열 연산 수행
+                # Performing array operations
                 array_calculation += dataset_raster_value * row['layer_weight_rate']
 
         except rasterio.errors.RasterioIOError as e:
@@ -71,10 +71,10 @@ def process_result_calculation(input_path, output_path, input_excel_path):
 
         elif exclude == 1:  # 0,1 inverted multiply
             with rasterio.open(file_path) as dataset:
-                dataset_raster_value = dataset.read(1) # 래스터 데이터 읽기
-                no_data_value = dataset.nodata # NoData 값 확인
+                dataset_raster_value = dataset.read(1) # read raster data
+                no_data_value = dataset.nodata # Check NoData value
 
-                # NoData인 셀을 0으로 설정
+                # Setting cells with NoData to 0
                 if no_data_value is not None:
                     dataset_raster_value[dataset_raster_value == no_data_value] = 0
 

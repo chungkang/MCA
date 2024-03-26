@@ -31,7 +31,7 @@ def process_range_str(range_str, raster_min_val, raster_max_val):
         else:
             return {'values': numbers}
 
-# 이 함수는 범위 문자열을 입력으로 받고 범위 유형과 실제 값을 딕셔너리로 반환합니다.
+# This function takes a range string as input and returns a dictionary containing the range type and actual values.
 def parse_range(layer_name, row_data, raster_data):
     # extract minimum/maximum values from raster data
     raster_min = np.min(raster_data)
@@ -65,9 +65,9 @@ def reclassify_by_range(layer_name, raster, raster_data, raster_output_path, ran
     reclassified_data = np.zeros_like(raster_data)
     
     for score, value_range in ranges.items():
-        # score가 0인, exclusive 인 경우 
+         # For cases where the score is 0 and the exclusivity is true
         if score == 0 and exclusive_yn == 'Y':
-            # exclusive_info 처리
+            # Processing exclusive_info
             min_val_raw = value_range.get('min', None)
             max_val_raw = value_range.get('max', None)
 
@@ -138,7 +138,7 @@ def process_range_calculation(input_path, output_path, input_excel_path, output_
                 'layer_weight': row['layer_weight']
             })
 
-            # AOI 파일을 사용해서 base frame을 생성
+            # Creating a base frame using the AOI file
             if 'AOI' in row['file_name']:
                 # create base raster array for raster calculation, should be 0 value
                 with rasterio.open(input_file_path) as AOI_dataset:
@@ -207,22 +207,22 @@ def process_range_calculation(input_path, output_path, input_excel_path, output_
             if 'GLOBathy' in row['file_name']:
                 # FPV
                 if row['AOI'] == 1:
-                    # GLOBathy 파일 열기
+                    # Open GLOBathy file
                     with rasterio.open(input_path + row['file_name']) as globathy_dataset:
-                        # GLOBathy 데이터 읽기
+                        # read GLOBathy data
                         globathy_data = globathy_dataset.read(1).astype(float)
                         
-                        # 'no data' 값이 아닌 모든 셀에 1 할당
-                        # 여기서는 예를 들어 'no data' 값을 0으로 가정합니다.
-                        # 실제 'no data' 값은 래스터 데이터의 메타데이터를 확인하여 적용해야 합니다.
-                        mask = globathy_data != 0  # 0이 아닌 모든 값에 대한 마스크 생성
-                        array_calculation[mask] = 1  # 마스크된 위치에 1을 할당
+                        # Assigning 1 to all cells that are not 'no data'
+                        # Here, for example, we assume 'no data' values to be 0.
+                        # Actual 'no data' values should be determined based on the metadata of the raster data.
+                        mask = globathy_data != 0  # Creating a mask for all non-zero values
+                        array_calculation[mask] = 1  # Assigning 1 to masked locations
 
                         base_file_name = os.path.splitext(row['file_name'])[0]
                         output_file_name = base_file_name + '_FPV.tif'
                         output_file_path = output_path + output_file_name
 
-                        # 변환된 래스터 데이터를 파일로 저장하는 로직
+                        # Logic for saving the converted raster data to a file
                         new_dataset = rasterio.open(
                             output_file_path, 'w',
                             driver='GTiff',
@@ -236,7 +236,7 @@ def process_range_calculation(input_path, output_path, input_excel_path, output_
                         new_dataset.write(array_calculation, 1)
                         new_dataset.close()
 
-                        # GLOBathy 처리된 파일 정보를 processed_files 리스트에 추가
+                        # Adding processed file information from GLOBathy to the processed_files list
                         processed_files.append({
                             'file_name': output_file_name,
                             'AOI': 1,
@@ -249,22 +249,22 @@ def process_range_calculation(input_path, output_path, input_excel_path, output_
                         })
                 # PV
                 else:
-                    # PV 파일 열기
+                    # read PV file
                     with rasterio.open(input_path + row['file_name']) as pv_dataset:
-                        # PV 데이터 읽기
+                        # read PV data
                         pv_data = pv_dataset.read(1).astype(float)
                         
-                        # 'no data' 또는 0의 값을 가진 모든 셀에 1 할당
-                        # 여기서도 'no data' 값을 0으로 가정합니다.
-                        # 실제 'no data' 값은 래스터 데이터의 메타데이터를 확인하여 적용해야 합니다.
-                        mask = (pv_data == 0)  # 0 값을 가진 셀에 대한 마스크 생성
-                        array_calculation[mask] = 1  # 마스크된 위치에 1을 할당
+                        # Assigning 1 to all cells with 'no data' or a value of 0
+                        # Here, we also assume 'no data' values to be 0.
+                        # Actual 'no data' values should be determined based on the metadata of the raster data.
+                        mask = (pv_data == 0)  # Creating a mask for cells with a value of 0
+                        array_calculation[mask] = 1  # Assigning 1 to masked locations
 
                         base_file_name = os.path.splitext(row['file_name'])[0]
                         output_file_name = base_file_name + '_PV.tif'
                         output_file_path = output_path + output_file_name
 
-                        # 변환된 래스터 데이터를 파일로 저장하는 로직
+                        # Logic for saving the converted raster data to a file
                         new_dataset = rasterio.open(
                             output_file_path, 'w',
                             driver='GTiff',
@@ -278,7 +278,7 @@ def process_range_calculation(input_path, output_path, input_excel_path, output_
                         new_dataset.write(array_calculation, 1)
                         new_dataset.close()
 
-                        # GLOBathy 처리된 파일 정보를 processed_files 리스트에 추가
+                        # Adding processed file information from GLOBathy to the processed_files list
                         processed_files.append({
                             'file_name': output_file_name,
                             'AOI': 1,
