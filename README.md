@@ -1,9 +1,6 @@
 # Multi Criteria Analysis
 The workflow is based on [QGIS Tutorials and Tips - Multi Criteria Overlay Analysis (QGIS3)](https://www.qgistutorials.com/en/docs/3/multi_criteria_overlay.html)
 
-The wrokflow of MCA with QGIS is also described on [SuntraceWiki](https://wiki.suntrace.de/wiki/Analysis_%E2%80%93_MCA_for_site_selection) as well 
-
-
 
 # Prerequisites
 - Install Git
