@@ -1,4 +1,4 @@
-# Multi Criteria Analysis
+# Multi Criteria Overlay Analysis
 The workflow is based on [QGIS Tutorials and Tips - Multi Criteria Overlay Analysis (QGIS3)](https://www.qgistutorials.com/en/docs/3/multi_criteria_overlay.html)
 
 
